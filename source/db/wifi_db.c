@@ -45,6 +45,8 @@ void init_wifidb(void)
 #define OFFCHAN_DEFAULT_NSCAN_IN_SEC 10800
 #define OFFCHAN_DEFAULT_TIDLE_IN_SEC 5
 
+#define DFS_DEFAULT_TIMER_IN_MIN 30
+
 static int init_radio_config_default(int radio_index, wifi_radio_operationParam_t *config,
     wifi_radio_feature_param_t *feat_config)
 {
@@ -164,6 +166,8 @@ static int init_radio_config_default(int radio_index, wifi_radio_operationParam_
     cfg.basicDataTransmitRates = WIFI_BITRATE_6MBPS | WIFI_BITRATE_12MBPS | WIFI_BITRATE_24MBPS;
     cfg.operationalDataTransmitRates = WIFI_BITRATE_6MBPS | WIFI_BITRATE_9MBPS | WIFI_BITRATE_12MBPS | WIFI_BITRATE_18MBPS | WIFI_BITRATE_24MBPS | WIFI_BITRATE_36MBPS | WIFI_BITRATE_48MBPS | WIFI_BITRATE_54MBPS;
     Fcfg.radio_index = radio_index;
+    cfg.DFSTimer = DFS_DEFAULT_TIMER_IN_MIN;
+    strncpy(cfg.radarDetected, " ", sizeof(cfg.radarDetected));
     if (is_radio_band_5G(cfg.band)) {
         Fcfg.OffChanTscanInMsec = OFFCHAN_DEFAULT_TSCAN_IN_MSEC;
         Fcfg.OffChanNscanInSec = OFFCHAN_DEFAULT_NSCAN_IN_SEC;
@@ -174,7 +178,7 @@ static int init_radio_config_default(int radio_index, wifi_radio_operationParam_
         Fcfg.OffChanTidleInSec = 0;
     }
 
-    wifi_util_dbg_print(WIFI_WEBCONFIG,"%s:%d Tscan:%lu Nscan:%lu Nidle:%lu\n", __func__, __LINE__, Fcfg.OffChanTscanInMsec, Fcfg.OffChanNscanInSec, Fcfg.OffChanTidleInSec);
+    wifi_util_dbg_print(WIFI_WEBCONFIG,"%s:%d Tscan:%lu Nscan:%lu Nidle:%lu \n", __func__, __LINE__, Fcfg.OffChanTscanInMsec, Fcfg.OffChanNscanInSec, Fcfg.OffChanTidleInSec);
     pthread_mutex_lock(&g_wifidb->data_cache_lock);
     memcpy(config,&cfg,sizeof(cfg));
     memcpy(feat_config, &Fcfg, sizeof(Fcfg));
