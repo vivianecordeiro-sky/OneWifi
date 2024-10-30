@@ -168,7 +168,7 @@ void upload_single_client_msmt_data(sta_data_t *sta_info)
     int size;
     sta_data_t  *sta_data;
     single_client_msmt_type_t msmt_type;
-    wifi_ccsp_t *wifi_ccsp = (wifi_ccsp_t *)(uintptr_t)get_wificcsp_obj();
+    wifi_mgr_t *wifi_mgr = (wifi_mgr_t *) get_wifimgr_obj();
 
     avro_writer_t writer;
     avro_schema_t inst_msmt_schema = NULL;
@@ -275,7 +275,7 @@ void upload_single_client_msmt_data(sta_data_t *sta_info)
     avro_value_set_fixed(&optional, transaction_id, 16);
     if (CHK_AVRO_ERR) wifi_util_dbg_print(WIFI_HARVESTER, "%s:%d: Avro error: %s\n", __func__, __LINE__, avro_strerror());
     wifi_util_dbg_print(WIFI_HARVESTER, "Report transaction uuid generated is %s\n", trans_id);
-    wifi_ccsp->desc.CcspTraceWarningRdkb_fn("WIFI_HARVESTER, Single client report transaction uuid generated is %s\n", trans_id);
+    wifi_mgr->wifi_ccsp.desc.CcspTraceWarningRdkb_fn("WIFI_HARVESTER, Single client report transaction uuid generated is %s\n", trans_id);
 
     //source - string
     avro_value_get_by_name(&adr, "header", &adrField, NULL);
@@ -579,7 +579,7 @@ void upload_single_client_msmt_data(sta_data_t *sta_info)
      if (CHK_AVRO_ERR) wifi_util_dbg_print(WIFI_HARVESTER, "%s:%d: Avro error: %s\n", __func__, __LINE__, avro_strerror());
 
      wifi_util_dbg_print(WIFI_HARVESTER, "Avro packing done\n");
-     wifi_ccsp->desc.CcspTraceInfoRdkb_fn("%s-%d AVRO packing done\n", __FUNCTION__, __LINE__);
+     wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("%s-%d AVRO packing done\n", __FUNCTION__, __LINE__);
 
      char *json;
      if (!avro_value_to_json(&adr, 1, &json))
@@ -594,7 +594,7 @@ void upload_single_client_msmt_data(sta_data_t *sta_info)
      size += MAGIC_NUMBER_SIZE + SCHEMA_ID_LENGTH;
      sendWebpaMsg((char *)(serviceName), (char *)(dest), trans_id, NULL, NULL, (char *)(contentType), buff, size);//ONE_WIFI
      wifi_util_dbg_print(WIFI_HARVESTER, "Creating telemetry record successful\n");
-     wifi_ccsp->desc.CcspTraceInfoRdkb_fn("%s-%d Creation of Telemetry record is successful\n", __FUNCTION__, __LINE__);
+     wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("%s-%d Creation of Telemetry record is successful\n", __FUNCTION__, __LINE__);
 }
 
 void process_instant_msmt_monitor(wifi_provider_response_t *provider_response)

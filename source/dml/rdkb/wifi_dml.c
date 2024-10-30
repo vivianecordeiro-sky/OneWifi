@@ -24,40 +24,37 @@
 void start_dml()
 {
     wifi_mgr_t *wifi_mgr = (wifi_mgr_t *) get_wifimgr_obj();
-    wifi_dml_t *dml = (wifi_dml_t *) (uintptr_t)get_wifidml_obj();
 
     /* pthread_create for DML functionality */
-    start_dml_main(&dml->ssp);
+    start_dml_main(&wifi_mgr->wifidml.ssp);
 
     wifi_util_info_print(WIFI_MGR,"%s: waiting for DML init\n", __func__);
 
     pthread_mutex_lock(&wifi_mgr->lock);
 
-    while(!dml->dml_init_status.condition) {
-        pthread_cond_wait(&dml->dml_init_status.cv, &wifi_mgr->lock);
+    while(!wifi_mgr->wifidml.dml_init_status.condition) {
+        pthread_cond_wait(&wifi_mgr->wifidml.dml_init_status.cv, &wifi_mgr->lock);
     }
 
     pthread_mutex_unlock(&wifi_mgr->lock);
-    pthread_cond_destroy(&dml->dml_init_status.cv);
+    pthread_cond_destroy(&wifi_mgr->wifidml.dml_init_status.cv);
     wifi_util_info_print(WIFI_MGR,"%s: DML init complete\n", __func__);
 }
 
 void set_dml_init_status(bool status)
 {
-    wifi_dml_t *dml = (wifi_dml_t *) (uintptr_t)get_wifidml_obj();
     wifi_mgr_t *wifi_mgr = get_wifimgr_obj();
 
-    wifi_util_info_print(WIFI_MGR, "%s Marking DML Init Complete. Start Wifi Ctrl\n", __FUNCTION__);
-
     if (status == false) {
-        dml->dml_init_status.condition = status;
-        pthread_cond_init(&dml->dml_init_status.cv, NULL);
+        wifi_mgr->wifidml.dml_init_status.condition = status;
+        pthread_cond_init(&wifi_mgr->wifidml.dml_init_status.cv, NULL);
         pthread_mutex_init(&wifi_mgr->lock, NULL);
     } else {
         pthread_mutex_lock(&wifi_mgr->lock);
-        dml->dml_init_status.condition = status;
-        pthread_cond_signal(&dml->dml_init_status.cv);
+        wifi_mgr->wifidml.dml_init_status.condition = status;
+        pthread_cond_signal(&wifi_mgr->wifidml.dml_init_status.cv);
         pthread_mutex_unlock(&wifi_mgr->lock);
+        wifi_util_info_print(WIFI_MGR, "%s Marking DML Init Complete. Start Wifi Ctrli\n", __FUNCTION__, status);
     }
 }
 

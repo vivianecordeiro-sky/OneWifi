@@ -54,11 +54,6 @@ wifi_ccsp_t *get_wificcsp_obj(void)
     return &g_wifi_mgr.wifi_ccsp;
 }
 
-wifi_ccsp_desc_t *get_ccsp_descriptor()
-{
-   return &g_wifi_mgr.wifi_ccsp.desc;
-}
-
 wifi_dml_t *get_wifidml_obj(void)
 {
     return &g_wifi_mgr.wifidml;
@@ -286,7 +281,7 @@ int init_wifimgr()
     wifidb_init(get_wifidb_obj());
 
     /* Initialize SSP loop */
-    get_wifidml_obj()->desc.ssp_init_fn(false);
+    get_wifidml_obj()->desc.ssp_init_fn();
 
     //Start Wifi DB server, and Initialize data Cache
     get_wifidb_obj()->desc.init_fn();

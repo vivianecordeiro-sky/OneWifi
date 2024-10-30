@@ -562,7 +562,7 @@ void levl_csi_publish(mac_address_t mac_address, wifi_csi_dev_t *csi_dev_data)
     curr_length = curr_length + sizeof(mac_addr_t);
     csi_data_length = sizeof(wifi_csi_data_t);
     memcpy((header + curr_length), &csi_data_length, sizeof(unsigned int));
-    int buffer_size = CSI_HEADER_SIZE;
+    int buffer_size = CSI_HEADER_SIZE + sizeof(wifi_csi_data_t);
     if (wifi_app->data.u.levl.csi_over_fifo == false) {
         strncpy(eventName, "Device.WiFi.X_RDK_CSI_LEVL.data", sizeof(eventName) - 1);
         // Publish using new API
