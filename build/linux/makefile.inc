@@ -33,7 +33,7 @@ WIFI_RDK_HAL = $(BASE_DIR)/../rdk-wifi-hal
 WIFI_HOSTAP_BASE = $(BASE_DIR)/../rdk-wifi-libhostap/source/hostap-2.10
 WIFI_HOSTAP_SRC = $(WIFI_HOSTAP_BASE)/src
 WIFI_HOSTAP_SUPPLICANT = $(WIFI_HOSTAP_BASE)/wpa_supplicant
-ONE_WIFI_EM_HOME = $(BASE_DIR)/../easy_mesh_onewifi
+ONE_WIFI_EM_HOME = $(BASE_DIR)/../unified-wifi-mesh
 
 INSTALLDIR = $(BASE_DIR)/install
 OBJDIR = obj

@@ -74,11 +74,10 @@ off_channel_param_t *get_wifi_ocs(unsigned int radioIndex)
 int print_ocs_state(void *arg)
 {
     wifi_mgr_t *mgr = get_wifimgr_obj();
-    wifi_ccsp_t *wifi_ccsp = (wifi_ccsp_t *)(uintptr_t)get_wificcsp_obj();
 
     for (UINT radioIndex = 0; radioIndex < getNumberRadios(); radioIndex++) {
         if (is_radio_band_5G(mgr->radio_config[radioIndex].oper.band)) {
-            wifi_ccsp->desc.CcspTraceInfoRdkb_fn("Off_channel_scan feature is disabled returning Radio index = %u RFC = "
+            mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("Off_channel_scan feature is disabled returning Radio index = %u RFC = "
                            "%d; TScan = %lu; NScan = %lu; Tidle = %lu\n",
                 radioIndex, mgr->rfc_dml_parameters.wifi_offchannelscan_app_rfc,
                 mgr->radio_config[radioIndex].feature.OffChanTscanInMsec,
@@ -134,7 +133,6 @@ int push_ocs_config_event_to_monitor_queue(wifi_mon_stats_request_state_t state,
     wifi_mgr_t *wifi_mgr = get_wifimgr_obj();
     off_channel_param_t *ocs_cfg = get_wifi_ocs(radioIndex);
     wifi_monitor_data_t *data;
-    wifi_ccsp_t *wifi_ccsp = (wifi_ccsp_t *)(uintptr_t)get_wificcsp_obj();
     wifi_util_dbg_print(WIFI_OCS, "%s:%d Entering \n", __func__, __LINE__);
 
     if (wifi_mgr == NULL) {
@@ -176,7 +174,7 @@ int push_ocs_config_event_to_monitor_queue(wifi_mon_stats_request_state_t state,
     int valid_chan_count = 0;
     for (int num = 0; num < wifiCapPtr->channel_list[0].num_channels; num++) {
         if (!dfs && (wifiCapPtr->channel_list[0].channels_list[num] >= DFS_START && wifiCapPtr->channel_list[0].channels_list[num] <= DFS_END)) { //Skip DFS channels if DFS disabled
-            wifi_ccsp->desc.CcspTraceDebugRdkb_fn("Off_channel_scan Skipping DFS Channel\n");
+            wifi_mgr->wifi_ccsp.desc.CcspTraceDebugRdkb_fn("Off_channel_scan Skipping DFS Channel\n");
             continue;
         }
         data->u.mon_stats_config.args.channel_list.channels_list[valid_chan_count] = wifiCapPtr->channel_list[0].channels_list[num];
@@ -368,7 +366,6 @@ void off_chan_print_neighbour_data(wifi_provider_response_t *provider_response)
     unsigned int i,j;
     wifi_mgr_t *wifi_mgr = get_wifimgr_obj();
     off_channel_param_t *ocs_cfg = get_wifi_ocs(provider_response->args.radio_index);
-    wifi_ccsp_t *wifi_ccsp = (wifi_ccsp_t *)(uintptr_t)get_wificcsp_obj();
 
     if (ocs_cfg == NULL || wifi_mgr == NULL || off_chan_scan_data == NULL) {
         wifi_util_error_print(WIFI_OCS,"%s:%d: ocs_cfg or wifi_mgr or off_chan_scan_data is NULL\n", __func__, __LINE__);
@@ -377,7 +374,7 @@ void off_chan_print_neighbour_data(wifi_provider_response_t *provider_response)
 
     unsigned int radio_index = provider_response->args.radio_index;
     wifi_util_dbg_print(WIFI_OCS,"%s:%d radio_index : %d stats_array_size : %d\r\n",__func__, __LINE__, radio_index, provider_response->stat_array_size);
-    wifi_ccsp->desc.CcspTraceDebugRdkb_fn("Off_channel_scan Total channels: %lu \n", wifi_mgr->radio_config[provider_response->args.radio_index].feature.Nchannel);
+    wifi_mgr->wifi_ccsp.desc.CcspTraceDebugRdkb_fn("Off_channel_scan Total channels: %lu \n", wifi_mgr->radio_config[provider_response->args.radio_index].feature.Nchannel);
 
     if (provider_response->stat_array_size <= 0){
         wifi_util_error_print(WIFI_OCS,"%s:%d: provider_response is NULL\n", __func__, __LINE__);
@@ -407,7 +404,7 @@ void off_chan_print_neighbour_data(wifi_provider_response_t *provider_response)
             }
             count++;
         }
-        wifi_ccsp->desc.CcspTraceInfoRdkb_fn("Off_channel_scan Total Scan Results:%d for channel %d \n", count, ocs_cfg->chan_list[i]);
+        wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("Off_channel_scan Total Scan Results:%d for channel %d \n", count, ocs_cfg->chan_list[i]);
         wifi_util_dbg_print(WIFI_OCS,"%s:%d Off_channel_scan Total Scan Results:%d for channel %d\r\n",__func__, __LINE__, count, ocs_cfg->chan_list[i]);
         int neighbor = 0;
         if (count > 0) {
@@ -419,7 +416,7 @@ void off_chan_print_neighbour_data(wifi_provider_response_t *provider_response)
                     continue;
                 }
                 neighbor++;
-                wifi_ccsp->desc.CcspTraceInfoRdkb_fn("Off_channel_scan Neighbor:%d ap_BSSID:%s ap_SignalStrength: %d\n", neighbor, off_chan_scan_data->ap_BSSID, off_chan_scan_data->ap_SignalStrength);
+                wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("Off_channel_scan Neighbor:%d ap_BSSID:%s ap_SignalStrength: %d\n", neighbor, off_chan_scan_data->ap_BSSID, off_chan_scan_data->ap_SignalStrength);
                 wifi_util_dbg_print(WIFI_OCS,"%s:%d Off_channel_scan Neighbor:%d ap_BSSID:%s ap_SignalStrength: %d\n",__func__, __LINE__, neighbor, off_chan_scan_data->ap_BSSID, off_chan_scan_data->ap_SignalStrength);
             }
         }
@@ -430,7 +427,7 @@ void off_chan_print_chan_stats_data(wifi_provider_response_t *provider_response)
 {
     radio_chan_data_t *off_chan_scan_data = NULL;
     off_chan_scan_data = (radio_chan_data_t *) provider_response->stat_pointer;
-    wifi_ccsp_t *wifi_ccsp = (wifi_ccsp_t *)(uintptr_t)get_wificcsp_obj();
+    wifi_mgr_t *wifi_mgr = get_wifimgr_obj();
     if (off_chan_scan_data == NULL) {
         wifi_util_error_print(WIFI_OCS,"%s:%d: off_chan_scan_data is NULL\n", __func__, __LINE__);
         return;
@@ -455,7 +452,7 @@ void off_chan_print_chan_stats_data(wifi_provider_response_t *provider_response)
         if (off_chan_scan_data[count].ch_number == (int) prim_chan) {
             continue;
         }
-        wifi_ccsp->desc.CcspTraceInfoRdkb_fn("Off_channel_scan Channel number:%d Channel Utilization:%d \n",off_chan_scan_data[count].ch_number, off_chan_scan_data[count].ch_utilization);
+        wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("Off_channel_scan Channel number:%d Channel Utilization:%d \n",off_chan_scan_data[count].ch_number, off_chan_scan_data[count].ch_utilization);
          wifi_util_dbg_print(WIFI_OCS,"%s:%d: radio_index : %d channel_num : %d ch_utilization : %d ch_utilization_total:%lld\r\n",
                              __func__, __LINE__, radio_index, off_chan_scan_data[count].ch_number, off_chan_scan_data[count].ch_utilization, off_chan_scan_data[count].ch_utilization_total);
     }
@@ -530,7 +527,6 @@ void handle_monitor_ocs_event(wifi_app_t *app, wifi_event_t *event)
 int validate_ocs()
 {
     wifi_mgr_t *mgr = get_wifimgr_obj();
-    wifi_ccsp_t *wifi_ccsp = (wifi_ccsp_t *)(uintptr_t)get_wificcsp_obj();
     if (mgr == NULL) {
         wifi_util_error_print(WIFI_OCS, "%s:%d: mgr is NULL\n", __func__, __LINE__);
         return RETURN_ERR;
@@ -541,7 +537,7 @@ int validate_ocs()
         if ((is_radio_band_5G(mgr->radio_config[radioIndex].oper.band))) {
             off_channel_param_t *ocs_cfg = get_wifi_ocs(radioIndex);
 
-            wifi_ccsp->desc.CcspTraceInfoRdkb_fn("Off_channel_scan feature newly configured values RFC = %d; TScan = "
+            mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("Off_channel_scan feature newly configured values RFC = %d; TScan = "
                            "%lu; NScan = %lu; Tidle = %lu\n",
                 mgr->rfc_dml_parameters.wifi_offchannelscan_app_rfc,
                 mgr->radio_config[radioIndex].feature.OffChanTscanInMsec,
@@ -644,7 +640,6 @@ static int off_chan_scan_init (unsigned int radio_index)
     wifi_ctrl_t *ctrl = (wifi_ctrl_t *)get_wifictrl_obj();
     off_channel_param_t *ocs_cfg = get_wifi_ocs(radio_index);
     ULONG Tscan = 0, Nscan = 0, Tidle = 0;
-    wifi_ccsp_t *wifi_ccsp = (wifi_ccsp_t *)(uintptr_t)get_wificcsp_obj();
 
     bool dfs_enable = g_wifi_mgr->rfc_dml_parameters.dfs_rfc;
     bool dfs_boot = g_wifi_mgr->rfc_dml_parameters.dfsatbootup_rfc;
@@ -654,10 +649,10 @@ static int off_chan_scan_init (unsigned int radio_index)
     Nscan = ocs_cfg->NscanSec;
     Tidle = ocs_cfg->TidleSec;
 
-    wifi_ccsp->desc.CcspTraceDebugRdkb_fn("Off_channel_scan feature RFC = %d; TScan = %lu; NScan = %lu; Tidle = %lu; DFS:%d\n", ocs_cfg->off_scan_rfc, Tscan, ((Nscan != 0)?((24*3600)/Nscan):Nscan), Tidle, dfs);
+    g_wifi_mgr->wifi_ccsp.desc.CcspTraceDebugRdkb_fn("Off_channel_scan feature RFC = %d; TScan = %lu; NScan = %lu; Tidle = %lu; DFS:%d\n", ocs_cfg->off_scan_rfc, Tscan, ((Nscan != 0)?((24*3600)/Nscan):Nscan), Tidle, dfs);
 
     if (!(is_radio_band_5G(g_wifi_mgr->radio_config[radio_index].oper.band))) {
-        wifi_ccsp->desc.CcspTraceErrorRdkb_fn("Off_channel_scan Cannot run for radio index: %d as feature for the same is not developed yet\n",radio_index + 1);
+        g_wifi_mgr->wifi_ccsp.desc.CcspTraceErrorRdkb_fn("Off_channel_scan Cannot run for radio index: %d as feature for the same is not developed yet\n",radio_index + 1);
         return RETURN_OK;
     }
 
@@ -668,7 +663,7 @@ static int off_chan_scan_init (unsigned int radio_index)
 
     /*Checking if rfc is disabled or if any one of the params are 0; if yes, scan is aborted*/
     if (!ocs_cfg->off_scan_rfc || Tscan == 0 || Nscan == 0 || Tidle == 0) {
-        wifi_ccsp->desc.CcspTraceInfoRdkb_fn("Off_channel_scan feature is disabled returning RFC = %d; TScan = %lu; NScan = %lu; Tidle = %lu\n", ocs_cfg->off_scan_rfc, Tscan, ((Nscan != 0)? ((24*3600)/Nscan):Nscan), Tidle);
+        g_wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("Off_channel_scan feature is disabled returning RFC = %d; TScan = %lu; NScan = %lu; Tidle = %lu\n", ocs_cfg->off_scan_rfc, Tscan, ((Nscan != 0)? ((24*3600)/Nscan):Nscan), Tidle);
         if ((ocs_cfg->curr_off_channel_scan_period != (int) Nscan) && (Nscan != 0)) {
             ocs_cfg->curr_off_channel_scan_period = Nscan;
         }
@@ -694,7 +689,7 @@ static int off_chan_scan_init (unsigned int radio_index)
 
     //If DFS enabled and country code is not US, CA or GB; the scan should not run for 5GHz radio. Possible updates might be required for GW using two 5G radios
     if (dfs && !(strncmp(countryStr, "US", 2) || strncmp(countryStr, "CA", 2) || strncmp(countryStr, "GB", 2))) {
-        wifi_ccsp->desc.CcspTraceErrorRdkb_fn("Getting country code %s; skipping the scan!\n", countryStr);
+        g_wifi_mgr->wifi_ccsp.desc.CcspTraceErrorRdkb_fn("Getting country code %s; skipping the scan!\n", countryStr);
 
         if ((ocs_cfg->curr_off_channel_scan_period != (int) Nscan) && (Nscan != 0)) {
             ocs_cfg->curr_off_channel_scan_period = Nscan;
@@ -710,10 +705,10 @@ static int off_chan_scan_init (unsigned int radio_index)
         }
         return RETURN_OK;
     }
-    wifi_ccsp->desc.CcspTraceInfoRdkb_fn("Off_channel_scan DFS:%d and country code is %s\n", dfs, countryStr);
+    g_wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("Off_channel_scan DFS:%d and country code is %s\n", dfs, countryStr);
 
     if (push_ocs_config_event_to_monitor_queue(mon_stats_request_state_start, radio_index) != RETURN_OK) {
-        wifi_ccsp->desc.CcspTraceErrorRdkb_fn("Off_channel_scan failed to push the event\n");
+        g_wifi_mgr->wifi_ccsp.desc.CcspTraceErrorRdkb_fn("Off_channel_scan failed to push the event\n");
         wifi_util_error_print(WIFI_OCS, "Off_channel_scan failed to push the event\n");
         return RETURN_ERR;
     }

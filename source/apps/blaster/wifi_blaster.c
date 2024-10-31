@@ -267,7 +267,7 @@ static void active_msmt_log_message( blaster_log_level_t level,char *fmt, ...)
 {
     va_list args;
     char msg[1024] = {};
-    wifi_ccsp_t *wifi_ccsp = (wifi_ccsp_t *)(uintptr_t)get_wificcsp_obj();
+    wifi_mgr_t *wifi_mgr = (wifi_mgr_t *) get_wifimgr_obj();
 
     va_start(args, fmt);
     vsnprintf(msg, sizeof(msg), fmt, args);
@@ -275,10 +275,10 @@ static void active_msmt_log_message( blaster_log_level_t level,char *fmt, ...)
 
     switch(level){
     case BLASTER_INFO_LOG:
-        wifi_ccsp->desc.CcspTraceInfoRdkb_fn(msg);
+        wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn(msg);
         break;
     case BLASTER_DEBUG_LOG:
-        wifi_ccsp->desc.CcspTraceDebugRdkb_fn(msg);
+        wifi_mgr->wifi_ccsp.desc.CcspTraceDebugRdkb_fn(msg);
         break;
     default:
         break;

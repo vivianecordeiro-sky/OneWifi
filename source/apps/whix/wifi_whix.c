@@ -183,13 +183,13 @@ int whix_upload_channel_width_telemetry(unsigned int radio_index)
     BOOL radioEnabled = FALSE;
     char *t_str = NULL;
     unsigned long int itr = 0;
-    wifi_ccsp_t *wifi_ccsp = (wifi_ccsp_t *)(uintptr_t)get_wificcsp_obj();
+    wifi_mgr_t *wifi_mgr = (wifi_mgr_t *) get_wifimgr_obj();
 
     wifi_util_dbg_print(WIFI_APPS, "Entering %s:%d \n", __FUNCTION__, __LINE__);
     wifi_radio_operationParam_t* radioOperation = getRadioOperationParam(radio_index);
 
     if (radioOperation == NULL) {
-        wifi_ccsp->desc.CcspTraceWarningRdkb_fn("%s : failed to getRadioOperationParam with radio index:%d \n", __FUNCTION__, radio_index);
+        wifi_mgr->wifi_ccsp.desc.CcspTraceWarningRdkb_fn("%s : failed to getRadioOperationParam with radio index:%d \n", __FUNCTION__, radio_index);
         radioEnabled = FALSE;
     } else {
         radioEnabled = radioOperation->enable;
@@ -1096,7 +1096,7 @@ int upload_client_telemetry_data(wifi_app_t *app, unsigned int num_devs, unsigne
     bool is_managed_wifi = false;
     unsigned int vap_array_index;
     unsigned int radioIndex = getRadioIndexFromAp(vap_index);
-    wifi_ccsp_t *wifi_ccsp = (wifi_ccsp_t *)(uintptr_t)get_wificcsp_obj();
+    wifi_mgr_t *wifi_mgr = (wifi_mgr_t *) get_wifimgr_obj();
 
     if (NULL == sta && num_devs != 0) {
         wifi_util_error_print(WIFI_APPS, "%s:%d sta is NULL and num_devs %u\n", __func__, __LINE__,
@@ -1137,7 +1137,7 @@ int upload_client_telemetry_data(wifi_app_t *app, unsigned int num_devs, unsigne
 
         wifi_radio_operationParam_t *radioOperation = getRadioOperationParam(radioIndex);
         if (radioOperation == NULL) {
-            wifi_ccsp->desc.CcspTraceWarningRdkb_fn("%s : failed to getRadioOperationParam with radio index \n", __FUNCTION__);
+            wifi_mgr->wifi_ccsp.desc.CcspTraceWarningRdkb_fn("%s : failed to getRadioOperationParam with radio index \n", __FUNCTION__);
             return RETURN_ERR;
         }
 

@@ -9,7 +9,9 @@ SRCREV_2_10="9d07b9447e76059a2ddef2a879c57d0934634188"
 cd ..
 git clone https://github.com/rdkcentral/rdk-wifi-hal.git rdk-wifi-hal
 git clone https://github.com/Aniket0606/rdkb-halif-wifi.git halinterface
-
+cd $ONEWIFI_DIR
+mkdir -p install/bin
+mkdir -p install/lib
 
 
 #Check if the HOSTAP_DIR already present before creating

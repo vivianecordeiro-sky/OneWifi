@@ -729,9 +729,6 @@ webconfig_error_t translate_private_vap_info_to_em_bss_config(wifi_vap_info_t *v
                 "security mode 0x%x\n", __func__, __LINE__, vap->u.bss_info.security.mode);
     }
 
-    strncpy(vap_row->passphrase, vap->u.bss_info.security.u.key.key, sizeof(vap_row->passphrase));
-    vap_row->sec_mode = vap->u.bss_info.security.mode;
-
     return webconfig_error_none;
 }
 
@@ -1154,8 +1151,6 @@ webconfig_error_t translate_em_bss_to_private_vap_info(wifi_vap_info_t *vap, con
        vap->u.bss_info.security.mode = enum_sec;
      */
 
-    vap->u.bss_info.security.mode = vap_row->sec_mode;
-    strncpy(vap->u.bss_info.security.u.key.key,vap_row->passphrase, sizeof(vap->u.bss_info.security.u.key.key));
     return webconfig_error_none;
 }
 
