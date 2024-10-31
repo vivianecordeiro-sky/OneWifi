@@ -27,15 +27,15 @@ PLATFORM = $(shell uname -a)
 
 BASE_DIR := $(shell pwd)
 
-ONE_WIFI_HOME = $(BASE_DIR)/../generic
-WIFI_HAL_INTERFACE = $(BASE_DIR)/../halinterface
+ONE_WIFI_HOME = $(BASE_DIR)/
+WIFI_HAL_INTERFACE = $(BASE_DIR)/../halinterface/include
 WIFI_RDK_HAL = $(BASE_DIR)/../rdk-wifi-hal
 WIFI_HOSTAP_BASE = $(BASE_DIR)/../rdk-wifi-libhostap/source/hostap-2.10
 WIFI_HOSTAP_SRC = $(WIFI_HOSTAP_BASE)/src
 WIFI_HOSTAP_SUPPLICANT = $(WIFI_HOSTAP_BASE)/wpa_supplicant
 ONE_WIFI_EM_HOME = $(BASE_DIR)/../easy_mesh_onewifi
 
-INSTALLDIR = $(BASE_DIR)/../install
+INSTALLDIR = $(BASE_DIR)/install
 OBJDIR = obj
 CXX = g++
 CC = gcc
