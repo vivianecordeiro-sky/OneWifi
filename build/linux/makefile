@@ -27,7 +27,7 @@
 # executable must be linked against.
 #
 
-include makefile.inc
+include build/linux/makefile.inc
 
 
 EASY_MESH_NODE = 1
@@ -397,8 +397,8 @@ endif
 LDFLAGS = $(LIBDIRS) $(LIBS)
 
 $(BUILD_DIR):
-	@mkdir -p ../install/lib
-	@mkdir -p ../install/bin
+	@mkdir -p $(INSTALLDIR)/lib
+	@mkdir -p $(INSTALLDIR)/bin
 #
 # Default target: the first target is the default target.
 # Just type "make -f Makefile.Linux" to build it.
@@ -452,4 +452,7 @@ clean:
 
 run:
 	./$(PROGRAM)
+
+setup:
+	./build/linux/setup.sh
 
