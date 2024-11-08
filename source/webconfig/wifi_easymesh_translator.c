@@ -466,7 +466,7 @@ webconfig_error_t translate_associated_clients_to_easymesh_sta_info(webconfig_su
             //Get the corresponding vap
             vap = &vap_map->vap_array[j];
             if (vap == NULL) {
-                wifi_util_dbg_print(WIFI_WEBCONFIG,"%s:%d: Unable to find the vap entry %d\n", __func__, __LINE__);
+                wifi_util_dbg_print(WIFI_WEBCONFIG,"%s:%d: Unable to find the vap entry\n", __func__, __LINE__);
                 return webconfig_error_translate_to_easymesh;
             }
 
