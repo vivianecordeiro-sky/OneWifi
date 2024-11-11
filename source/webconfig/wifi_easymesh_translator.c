@@ -438,8 +438,8 @@ webconfig_error_t translate_associated_clients_to_easymesh_sta_info(webconfig_su
     assoc_dev_data_t *assoc_dev_data = NULL;
     rdk_wifi_vap_info_t *rdk_vap_info = NULL;
     webconfig_external_easymesh_t *proto = NULL;
-    char sta_list_key[64];
-    mac_addr_str_t mac_str;
+    em_long_string_t key;
+    mac_addr_str_t sta_str, bss_str, radio_str;
 
     decoded_params = &data->u.decoded;
     if (decoded_params == NULL) {
@@ -479,6 +479,7 @@ webconfig_error_t translate_associated_clients_to_easymesh_sta_info(webconfig_su
             if (rdk_vap_info->associated_devices_diff_map != NULL) {
                 assoc_dev_data = hash_map_get_first(rdk_vap_info->associated_devices_diff_map);
                 while (assoc_dev_data != NULL) {
+                    memset(key, 0, sizeof(key));
                     if (associated_client_count >= WEBCONFIG_MAX_ASSOCIATED_CLIENTS) {
                         wifi_util_error_print(WIFI_WEBCONFIG,"%s:%d: Exceeded max number of associated clients %d, vap_name '%s'\n", __func__, __LINE__, WEBCONFIG_MAX_ASSOCIATED_CLIENTS, rdk_vap_info->vap_name);
                         break;
@@ -495,12 +496,12 @@ webconfig_error_t translate_associated_clients_to_easymesh_sta_info(webconfig_su
                     proto->set_num_radio(proto->data_model, decoded_params->num_radios);
                     proto->set_num_bss(proto->data_model, radio->vaps.num_vaps);
 
-                    to_mac_str(radio_info->id.mac, mac_str);
-                    snprintf(sta_list_key+strlen(sta_list_key),sizeof(sta_list_key),"%s-",mac_str);
-                    to_mac_str(bss_info->bssid.mac, mac_str);
-                    snprintf(sta_list_key+strlen(sta_list_key),sizeof(sta_list_key),"%s-", mac_str);
-                    to_mac_str(assoc_dev_data->dev_stats.cli_MACAddress, mac_str);
-                    snprintf(sta_list_key+strlen(sta_list_key),sizeof(sta_list_key),"%s", mac_str);
+                    to_mac_str(assoc_dev_data->dev_stats.cli_MACAddress, sta_str);
+                    to_mac_str(bss_info->bssid.mac, bss_str);
+                    to_mac_str(radio_info->id.mac, radio_str);
+                    snprintf(key, sizeof(key), "%s@%s@%s", sta_str, bss_str, radio_str);
+                    printf("\n%s:%d: Add key=%s\n", __func__, __LINE__, key);
+                    printf("\n%s:%d: client_state: %d\n", __func__, __LINE__, assoc_dev_data->client_state);
 
                     memcpy(em_sta_dev_info->id, assoc_dev_data->dev_stats.cli_MACAddress, sizeof(mac_address_t));
                     memcpy(em_sta_dev_info->bssid, vap->u.bss_info.bssid, sizeof(mac_address_t));
@@ -515,7 +516,11 @@ webconfig_error_t translate_associated_clients_to_easymesh_sta_info(webconfig_su
                     em_sta_dev_info->bytes_rx=assoc_dev_data->dev_stats.cli_BytesReceived;
                     em_sta_dev_info->errors_tx=assoc_dev_data->dev_stats.cli_ErrorsSent;
 
-                    proto->put_sta_info(proto->data_model, em_sta_dev_info);
+                    if (assoc_dev_data->client_state == 0) {
+                        proto->put_sta_info(proto->data_model, em_sta_dev_info, em_target_sta_map_assoc);
+                    } else {
+                        proto->put_sta_info(proto->data_model, em_sta_dev_info, em_target_sta_map_disassoc);
+                    }
                     free(em_sta_dev_info);
                     associated_client_count++;
                     assoc_dev_data = hash_map_get_next(rdk_vap_info->associated_devices_diff_map, assoc_dev_data);
@@ -536,6 +541,8 @@ webconfig_error_t translate_sta_object_to_easymesh_for_assocdev_stats(webconfig_
     int sta_size = 0;
     em_sta_info_t *em_sta_dev_info;
     webconfig_external_easymesh_t *proto;
+    bssid_t bssid;
+    mac_address_t ruid;
 
     webconfig_subdoc_decoded_data_t *params = &data->u.decoded;
     if (params == NULL) {
@@ -566,7 +573,7 @@ webconfig_error_t translate_sta_object_to_easymesh_for_assocdev_stats(webconfig_
     }
 
     for (unsigned int count = 0; count < sta_size; count++) {
-        em_sta_dev_info = proto->get_sta_info(proto->data_model, client_stats[count].cli_MACAddress);
+        em_sta_dev_info = proto->get_sta_info(proto->data_model, client_stats[count].cli_MACAddress, bssid, ruid, em_target_sta_map_assoc);
         if (em_sta_dev_info != NULL) {     
             memcpy(em_sta_dev_info[count].id, client_stats[count].cli_MACAddress, sizeof(mac_address_t));
             em_sta_dev_info[count].last_ul_rate             = client_stats[count].cli_LastDataUplinkRate;
