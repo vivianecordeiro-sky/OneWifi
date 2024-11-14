@@ -1352,25 +1352,23 @@ static int eth_bh_status_notify()
 
 void speed_test_handler (char *event_name, raw_data_t *p_data)
 {
-    char *pTmp = NULL;
     speed_test_data_t speed_test_data = { 0 };
 
     wifi_ctrl_t *ctrl = (wifi_ctrl_t *)get_wifictrl_obj();
 
-    pTmp = p_data->raw_data.bytes;
-    if ((p_data->data_type != bus_data_type_string) || (pTmp == NULL)) {
+    if ((p_data->data_type != bus_data_type_uint32)) {
         wifi_util_error_print(WIFI_CTRL,"%s:%d event:%s wrong data_type:%x\n", __func__, __LINE__,
             event_name, p_data->data_type);
         return;
     }
 
     wifi_util_dbg_print(WIFI_CTRL, "%s: %d event name : [%s] Data received : [%u]\n", __func__,
-        __LINE__, event_name, atoi(pTmp));
+        __LINE__, event_name, p_data->raw_data.u32);
 
     if ((strcmp(event_name, SPEEDTEST_STATUS)) == 0) {
-        ctrl->speed_test_running = atoi(pTmp);
+        ctrl->speed_test_running = p_data->raw_data.u32;
     } else if ((strcmp(event_name, SPEEDTEST_SUBSCRIBE)) == 0) {
-        ctrl->speed_test_timeout = atoi(pTmp);
+        ctrl->speed_test_timeout = p_data->raw_data.u32;
     }
     speed_test_data.speed_test_running = ctrl->speed_test_running;
     speed_test_data.speed_test_timeout = ctrl->speed_test_timeout;
@@ -2126,6 +2124,70 @@ bus_error_t ap_get_handler(char *name, raw_data_t *p_data)
     return bus_error_invalid_input;
 }
 
+bus_error_t ap_get_radius_connected_endpoint(char *name, raw_data_t *p_data)
+{
+    unsigned int idx = 0;
+    int ret;
+    unsigned int num_of_radios = getNumberRadios();
+
+    if (!name) {
+        wifi_util_error_print(WIFI_CTRL, "%s:%d property name is not found\r\n", __FUNCTION__,
+            __LINE__);
+        return bus_error_invalid_input;
+    }
+
+    wifi_util_dbg_print(WIFI_CTRL, "%s(): %s\n", __FUNCTION__, name);
+
+    uint32_t str_len;
+
+    ret = sscanf(name, "Device.WiFi.AccessPoint.%d.Security.ConnectedRadiusEndpoint", &idx);
+    if (ret == 1 && idx > 0 && idx <= num_of_radios * MAX_NUM_VAP_PER_RADIO) {
+        wifi_front_haul_bss_t *vap_bss =  Get_wifi_object_bss_parameter(idx - 1);
+        if(vap_bss->enabled && (isVapHotspotSecure5g(idx - 1) || isVapHotspotSecure6g(idx - 1) || isVapHotspotOpen5g(idx - 1) || isVapHotspotOpen6g(idx - 1))){
+#ifndef WIFI_HAL_VERSION_3_PHASE2
+            str_len = strlen((char*)vap_bss->security.u.radius.connectedendpoint) + 1;
+            p_data->data_type = bus_data_type_string;
+            p_data->raw_data.bytes = malloc(str_len);
+            if (p_data->raw_data.bytes == NULL) {
+                wifi_util_error_print(WIFI_CTRL,"%s:%d memory allocation is failed:%d\r\n",__func__,
+                __LINE__, str_len);
+             return bus_error_out_of_resources;
+            }
+            strcpy((char *)p_data->raw_data.bytes, (char*)vap_bss->security.u.radius.connectedendpoint);
+            p_data->raw_data_len = str_len;
+#else
+            char temp_str[45] = {0};
+            getIpStringFromAdrress(temp_str,&vap_bss->security.u.radius.connectedendpoint);
+            str_len = strlen(temp_str)+1;
+            p_data->data_type = bus_data_type_string;
+            p_data->raw_data.bytes = malloc(str_len);
+            if (p_data->raw_data.bytes == NULL) {
+                wifi_util_error_print(WIFI_CTRL,"%s:%d memory allocation is failed:%d\r\n",__func__,
+                __LINE__, str_len);
+             return bus_error_out_of_resources;
+            }
+            strncpy((char *)p_data->raw_data.bytes, temp_str,sizeof(temp_str)-1);
+            p_data->raw_data_len = str_len;
+#endif
+        }
+        else
+        {
+            str_len = strlen("0.0.0.0") + 1;
+            p_data->data_type = bus_data_type_string;
+            p_data->raw_data.bytes = malloc(str_len);
+            if (p_data->raw_data.bytes == NULL) {
+                wifi_util_error_print(WIFI_CTRL,"%s:%d memory allocation is failed:%d\r\n",__func__,
+                __LINE__, str_len);
+             return bus_error_out_of_resources;
+            }
+            strncpy((char *)p_data->raw_data.bytes, "0.0.0.0", str_len);
+            p_data->raw_data_len = str_len;
+        }
+    }
+    wifi_util_dbg_print(WIFI_CTRL, "%s(): exit\n", __FUNCTION__);
+    return bus_error_success;
+}
+
 bus_error_t ap_table_addrowhandler(char const *tableName, char const *aliasName,
     uint32_t *instNum)
 {
@@ -2189,12 +2251,21 @@ bus_error_t ap_table_addrowhandler(char const *tableName, char const *aliasName,
         queue_push(ctrl->events_bus_data.events_bus_queue, event);
     }
 
+    event = (event_bus_element_t *)malloc(sizeof(event_bus_element_t));
+    if (event != NULL) {
+        sprintf(event->name, "Device.WiFi.AccessPoint.%d.Security.ConnectedRadiusEndpoint", *instNum);
+        event->idx = vap_index;
+        event->type =  wifi_event_radius_fallback_and_failover;
+        event->subscribed = FALSE;
+        event->num_subscribers = 0;
+        queue_push(ctrl->events_bus_data.events_bus_queue, event);
+    }
+
     pthread_mutex_unlock(&ctrl->events_bus_data.events_bus_lock);
     wifi_util_dbg_print(WIFI_CTRL, "%s(): exit\n", __FUNCTION__);
 
     return bus_error_success;
 }
-
 
 static bus_error_t stats_table_addrowhandler(char const *tableName, char const *aliasName,
     uint32_t *instNum)
@@ -2735,6 +2806,9 @@ void bus_register_handlers(wifi_ctrl_t *ctrl)
                                 { WIFI_ACCESSPOINT_DEV_DEAUTH,bus_element_type_event,
                                     { NULL, NULL, NULL, NULL, eventSubHandler, NULL}, slow_speed, ZERO_TABLE,
                                     { bus_data_type_string, false, 0, 0, 0, NULL } },
+                                { WIFI_ACCESSPOINT_RADIUS_CONNECTED_ENDPOINT, bus_element_type_method,
+                                    { ap_get_radius_connected_endpoint, NULL, NULL, NULL, NULL, NULL}, slow_speed, ZERO_TABLE,
+                                    { bus_data_type_string, false , 0, 0, 0, NULL } },
                                 { WIFI_ACCESSPOINT_DIAGDATA, bus_element_type_event,
                                     { ap_get_handler, NULL, NULL, NULL, eventSubHandler, NULL}, slow_speed, ZERO_TABLE,
                                     { bus_data_type_string, false, 0, 0, 0, NULL } },

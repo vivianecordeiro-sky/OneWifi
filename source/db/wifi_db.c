@@ -45,6 +45,8 @@ void init_wifidb(void)
 #define OFFCHAN_DEFAULT_NSCAN_IN_SEC 10800
 #define OFFCHAN_DEFAULT_TIDLE_IN_SEC 5
 
+#define DFS_DEFAULT_TIMER_IN_MIN 30
+
 static int init_radio_config_default(int radio_index, wifi_radio_operationParam_t *config,
     wifi_radio_feature_param_t *feat_config)
 {
@@ -77,6 +79,7 @@ static int init_radio_config_default(int radio_index, wifi_radio_operationParam_
     switch (cfg.band) {
         case WIFI_FREQUENCY_2_4_BAND:
             cfg.op_class = 12;
+            cfg.operatingClass = 81;
             cfg.channel = 1;
             cfg.channelWidth = WIFI_CHANNELBANDWIDTH_20MHZ;
             cfg.variant = WIFI_80211_VARIANT_G | WIFI_80211_VARIANT_N;
@@ -86,7 +89,8 @@ static int init_radio_config_default(int radio_index, wifi_radio_operationParam_
             break;
         case WIFI_FREQUENCY_5_BAND:
         case WIFI_FREQUENCY_5L_BAND:
-            cfg.op_class = 1; 
+            cfg.op_class = 128;
+            cfg.operatingClass = 128;
             cfg.channel = 44;
             cfg.channelWidth = WIFI_CHANNELBANDWIDTH_80MHZ;
             cfg.variant = WIFI_80211_VARIANT_A | WIFI_80211_VARIANT_N | WIFI_80211_VARIANT_AC | WIFI_80211_VARIANT_AX;
@@ -96,7 +100,8 @@ static int init_radio_config_default(int radio_index, wifi_radio_operationParam_
 #endif /* CONFIG_IEEE80211BE */
             break;
         case WIFI_FREQUENCY_5H_BAND:
-            cfg.op_class = 3;
+            cfg.op_class = 128;
+            cfg.operatingClass = 128;
             cfg.channel = 157;
             cfg.channelWidth = WIFI_CHANNELBANDWIDTH_80MHZ;
             cfg.variant = WIFI_80211_VARIANT_A | WIFI_80211_VARIANT_N | WIFI_80211_VARIANT_AC | WIFI_80211_VARIANT_AX;
@@ -107,6 +112,7 @@ static int init_radio_config_default(int radio_index, wifi_radio_operationParam_
             break;
         case WIFI_FREQUENCY_6_BAND:
             cfg.op_class = 131;
+            cfg.operatingClass = 131;
             cfg.channel = 197;
             cfg.channelWidth = WIFI_CHANNELBANDWIDTH_160MHZ;
             cfg.variant = WIFI_80211_VARIANT_AX;
@@ -164,6 +170,8 @@ static int init_radio_config_default(int radio_index, wifi_radio_operationParam_
     cfg.basicDataTransmitRates = WIFI_BITRATE_6MBPS | WIFI_BITRATE_12MBPS | WIFI_BITRATE_24MBPS;
     cfg.operationalDataTransmitRates = WIFI_BITRATE_6MBPS | WIFI_BITRATE_9MBPS | WIFI_BITRATE_12MBPS | WIFI_BITRATE_18MBPS | WIFI_BITRATE_24MBPS | WIFI_BITRATE_36MBPS | WIFI_BITRATE_48MBPS | WIFI_BITRATE_54MBPS;
     Fcfg.radio_index = radio_index;
+    cfg.DFSTimer = DFS_DEFAULT_TIMER_IN_MIN;
+    strncpy(cfg.radarDetected, " ", sizeof(cfg.radarDetected));
     if (is_radio_band_5G(cfg.band)) {
         Fcfg.OffChanTscanInMsec = OFFCHAN_DEFAULT_TSCAN_IN_MSEC;
         Fcfg.OffChanNscanInSec = OFFCHAN_DEFAULT_NSCAN_IN_SEC;
@@ -175,6 +183,8 @@ static int init_radio_config_default(int radio_index, wifi_radio_operationParam_
     }
 
     wifi_util_dbg_print(WIFI_WEBCONFIG,"%s:%d Tscan:%lu Nscan:%lu Nidle:%lu\n", __func__, __LINE__, Fcfg.OffChanTscanInMsec, Fcfg.OffChanNscanInSec, Fcfg.OffChanTidleInSec);
+    /* Call the function to update the operating classes based on Country code and Radio */
+    update_radio_operating_classes(&cfg);
     pthread_mutex_lock(&g_wifidb->data_cache_lock);
     memcpy(config,&cfg,sizeof(cfg));
     memcpy(feat_config, &Fcfg, sizeof(Fcfg));

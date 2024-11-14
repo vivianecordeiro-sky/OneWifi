@@ -25,7 +25,9 @@
 #include <string.h>
 #include "wifi_hal.h"
 
-#ifdef ONEWIFI_RDKB_SUPPORT
+#ifdef ONEWIFI_RDKB_APP_SUPPORT
+#include "safec_lib_common.h"
+
 extern int t2_event_d(char *marker, int value);
 extern int t2_event_s(char *marker, char *buff);
 extern int v_secure_system(const char *command);
@@ -35,6 +37,7 @@ extern char * getDeviceMac();
 extern int onewifi_pktgen_uninit();
 static int strcpy_func(char *dst, size_t max, const char *src) {
     strcpy_s(dst, max, src);
+    return 0;
 }
 #else
 static int t2_event_d(char *marker, int value)
