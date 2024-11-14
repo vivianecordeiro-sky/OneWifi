@@ -136,20 +136,21 @@ typedef enum {
     ctrl_webconfig_state_macfilter_cfg_rsp_pending = 0x0080,
     ctrl_webconfig_state_factoryreset_cfg_rsp_pending = 0x0100,
     ctrl_webconfig_state_associated_clients_cfg_rsp_pending = 0x0200,
-    ctrl_webconfig_state_csi_cfg_rsp_pending = 0x0400,
-    ctrl_webconfig_state_sta_conn_status_rsp_pending = 0x0800,
-    ctrl_webconfig_state_vap_mesh_sta_cfg_rsp_pending = 0x1000,
-    ctrl_webconfig_state_vap_mesh_backhaul_cfg_rsp_pending = 0x2000,
-    ctrl_webconfig_state_steering_clients_rsp_pending = 0x4000,
-    ctrl_webconfig_state_vap_lnf_cfg_rsp_pending = 0x8000,
-    ctrl_webconfig_state_blaster_cfg_init_rsp_pending = 0x10000,
-    ctrl_webconfig_state_blaster_cfg_complete_rsp_pending = 0x20000,
-    ctrl_webconfig_state_vap_mesh_backhaul_sta_cfg_rsp_pending = 0x40000,
-    ctrl_webconfig_state_trigger_dml_thread_data_update_pending = 0x80000,
-    ctrl_webconfig_state_max = 0x100000
+    ctrl_webconfig_state_associated_clients_full_cfg_rsp_pending = 0x0400,
+    ctrl_webconfig_state_csi_cfg_rsp_pending = 0x0800,
+    ctrl_webconfig_state_sta_conn_status_rsp_pending = 0x1000,
+    ctrl_webconfig_state_vap_mesh_sta_cfg_rsp_pending = 0x2000,
+    ctrl_webconfig_state_vap_mesh_backhaul_cfg_rsp_pending = 0x4000,
+    ctrl_webconfig_state_steering_clients_rsp_pending = 0x8000,
+    ctrl_webconfig_state_vap_lnf_cfg_rsp_pending = 0x10000,
+    ctrl_webconfig_state_blaster_cfg_init_rsp_pending = 0x20000,
+    ctrl_webconfig_state_blaster_cfg_complete_rsp_pending = 0x40000,
+    ctrl_webconfig_state_vap_mesh_backhaul_sta_cfg_rsp_pending = 0x80000,
+    ctrl_webconfig_state_trigger_dml_thread_data_update_pending = 0x100000,
+    ctrl_webconfig_state_max = 0x200000
 } wifi_ctrl_webconfig_state_t;
 
-#define CTRL_WEBCONFIG_STATE_MASK   0xfffff
+#define CTRL_WEBCONFIG_STATE_MASK   0x1fffff
 
 typedef struct {
         char mac_addr[MAC_STR_LEN];
