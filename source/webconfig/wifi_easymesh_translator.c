@@ -300,7 +300,6 @@ webconfig_error_t   translate_radio_object_to_easymesh_for_dml(webconfig_subdoc_
     wifi_vap_info_map_t *vap_map;
     radio_interface_mapping_t *radio_iface_map;
     webconfig_external_easymesh_t *proto;
-    //wifi_platform_property_t *wifi_prop = &data->u.decoded.hal_cap.wifi_prop;
     wifi_radio_operationParam_t  *oper_param;
     webconfig_subdoc_decoded_data_t *decoded_params;
 
@@ -321,7 +320,7 @@ webconfig_error_t   translate_radio_object_to_easymesh_for_dml(webconfig_subdoc_
         return webconfig_error_translate_to_easymesh;
     }
 
-    if ((decoded_params->num_radios < MIN_NUM_RADIOS) || (decoded_params->num_radios > MAX_NUM_RADIOS )){
+    if ((decoded_params->num_radios < MIN_NUM_RADIOS) || (decoded_params->num_radios > MAX_NUM_RADIOS )) {
         wifi_util_error_print(WIFI_WEBCONFIG, "%s:%d: Invalid number of radios : %x\n", __func__, __LINE__, decoded_params->num_radios);
         return webconfig_error_translate_to_easymesh;
     }
@@ -329,7 +328,6 @@ webconfig_error_t   translate_radio_object_to_easymesh_for_dml(webconfig_subdoc_
     for (unsigned int index = 0; index < decoded_params->num_radios; index++) {
         em_radio_info = proto->get_radio_info(proto->data_model, index);
         radio = &decoded_params->radios[index];
-        em_op_class_info = proto->get_op_class_info(proto->data_model, index);
         bss_count = 0;
         vap_map = &radio->vaps.vap_map;
         for (unsigned int j = 0; j < radio->vaps.num_vaps; j++) {
@@ -341,9 +339,6 @@ webconfig_error_t   translate_radio_object_to_easymesh_for_dml(webconfig_subdoc_
         }
 
         oper_param = &decoded_params->radios[index].oper;
-        //proto->set_num_bss(proto->data_model, bss_count);
-        //wifi_util_error_print(WIFI_WEBCONFIG, "%s:%d: number of bss count : %d\n", __func__, __LINE__, 
-        //        proto->get_num_bss(proto->data_model));
         radio_index = convert_radio_name_to_radio_index(decoded_params->radios[index].name);
         em_radio_info->enabled = oper_param->enable;
         radio_iface_map = NULL;
@@ -359,18 +354,24 @@ webconfig_error_t   translate_radio_object_to_easymesh_for_dml(webconfig_subdoc_
         }
         strncpy(em_radio_info->id.name,radio_iface_map->radio_name, sizeof(em_interface_name_t));
         mac_address_from_name(radio_iface_map->interface_name, em_radio_info->id.mac);
-        mac_address_from_name(radio_iface_map->interface_name,em_op_class_info->id.ruid);
-        em_op_class_info->id.type = 2;
-        em_op_class_info->op_class = oper_param->op_class;
-        em_op_class_info->channel = oper_param->channel;
-        em_op_class_info->tx_power = oper_param->transmitPower;
-        em_op_class_info->max_tx_power = oper_param->transmitPower;
-        em_op_class_info->num_non_op_channels = 0;
+        for (unsigned int j = 0 ; j < oper_param->numOperatingClasses; j++) {
+            em_op_class_info = proto->get_op_class_info(proto->data_model, j);
+            mac_address_from_name(radio_iface_map->interface_name, em_op_class_info->id.ruid);
+            em_op_class_info->id.type = 2;
+            em_op_class_info->id.index = j;
+            em_op_class_info->op_class = oper_param->operatingClasses[j].opClass;
+            em_op_class_info->max_tx_power = oper_param->operatingClasses[j].maxTxPower;
+            em_op_class_info->num_non_op_channels = oper_param->operatingClasses[j].numberOfNonOperChan;
+            for(int i = 0; i < oper_param->operatingClasses[j].numberOfNonOperChan; i++) {
+                em_op_class_info->non_op_channel[i] = oper_param->operatingClasses[j].nonOperable[i];
+            }
+        }
+        proto->set_num_op_class(proto->data_model, oper_param->numOperatingClasses);
+
         //Add default params of radio_info
         em_radio_info->number_of_unassoc_sta = 0;
         em_radio_info->noise = 90;
         em_radio_info->utilization = 50;
-        proto->set_num_op_class(proto->data_model, 1);
         em_radio_info->traffic_sep_combined_fronthaul = 0;
         em_radio_info->traffic_sep_combined_backhaul = 0;
         em_radio_info->steering_policy = 0;
