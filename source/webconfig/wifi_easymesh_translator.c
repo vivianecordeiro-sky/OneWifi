@@ -47,6 +47,7 @@
 #include "schema.h"
 #include "schema_gen.h"
 #include "webconfig_external_proto.h"
+#include "common/ieee802_11_defs.h"
 
 // static member to store the subdoc
 static webconfig_subdoc_data_t  webconfig_easymesh_data;
@@ -431,7 +432,7 @@ webconfig_error_t translate_associated_clients_to_easymesh_sta_info(webconfig_su
 {
     em_sta_info_t *em_sta_dev_info = NULL;
     unsigned int associated_client_count = 0;
-    unsigned int i = 0, j = 0;
+    unsigned int i = 0, j = 0, tag_len = 0;
     webconfig_subdoc_decoded_data_t *decoded_params = NULL;
     rdk_wifi_radio_t *radio = NULL;
     wifi_vap_info_map_t *vap_map = NULL;
@@ -441,6 +442,7 @@ webconfig_error_t translate_associated_clients_to_easymesh_sta_info(webconfig_su
     webconfig_external_easymesh_t *proto = NULL;
     em_long_string_t key;
     mac_addr_str_t sta_str, bss_str, radio_str;
+    struct ieee80211_mgmt *mgmt = NULL;
 
     decoded_params = &data->u.decoded;
     if (decoded_params == NULL) {
@@ -516,6 +518,15 @@ webconfig_error_t translate_associated_clients_to_easymesh_sta_info(webconfig_su
                     em_sta_dev_info->bytes_tx=assoc_dev_data->dev_stats.cli_BytesSent;
                     em_sta_dev_info->bytes_rx=assoc_dev_data->dev_stats.cli_BytesReceived;
                     em_sta_dev_info->errors_tx=assoc_dev_data->dev_stats.cli_ErrorsSent;
+
+                    if (assoc_dev_data->sta_data.msg_data.data == NULL) {
+                        wifi_util_error_print(WIFI_WEBCONFIG,"%s:%d: Association frame data not present\n", __func__, __LINE__);
+                        return webconfig_error_translate_to_easymesh;
+                    }
+                    mgmt = (struct ieee80211_mgmt *) assoc_dev_data->sta_data.msg_data.data;
+                    tag_len = assoc_dev_data->sta_data.msg_data.frame.len - IEEE80211_HDRLEN - sizeof(mgmt->u.assoc_req);
+                    memcpy(em_sta_dev_info->frame_body, mgmt->u.assoc_req.variable, sizeof(em_sta_dev_info->frame_body));
+                    em_sta_dev_info->frame_body_len = tag_len;
 
                     if (assoc_dev_data->client_state == 0) {
                         proto->put_sta_info(proto->data_model, em_sta_dev_info, em_target_sta_map_assoc);
