@@ -421,6 +421,7 @@ char *getDeviceMac()
                 get_bus_descriptor()->bus_data_free_fn(&data);
                 return NULL;
             }
+            str = (char *)data.raw_data.bytes;
             if (str == NULL) {
                 wifi_util_dbg_print(WIFI_MON, "%s Null pointer, bus get string len=%d for : %s\n",
                     __FUNCTION__, len, CPE_MAC_NAMESPACE);
@@ -430,7 +431,6 @@ char *getDeviceMac()
                 return NULL;
             }
             pthread_mutex_unlock(&ctrl->lock);
-            str = (char *)data.raw_data.bytes;
             AnscMacToLower(webpa_interface.deviceMAC, str, sizeof(webpa_interface.deviceMAC));
         }
 
