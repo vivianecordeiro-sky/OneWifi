@@ -1098,7 +1098,7 @@ void upload_single_client_active_msmt_data(blaster_hashmap_t *sta_info)
     avro_value_set_branch(&drField, 1, &optional);
 
     // CPU health metrics
-    wifi_util_dbg_print(WIFI_BLASTER, "%s:%d: WiFiBlasterCPUMetrics\n", __func__, __LINE__,
+    wifi_util_dbg_print(WIFI_BLASTER, "%s:%d: WiFiBlasterCPUMetrics %s\n", __func__, __LINE__,
         avro_strerror());
     avro_value_get_by_name(&optional, "WiFiBlasterCPUMetrics", &drField, NULL);
     avro_value_set_branch(&drField, 1, &cpu_dr);
@@ -1106,7 +1106,7 @@ void upload_single_client_active_msmt_data(blaster_hashmap_t *sta_info)
         wifi_util_dbg_print(WIFI_BLASTER, "%s:%d: Avro error: %s\n", __func__, __LINE__,
             avro_strerror());
     }
-    wifi_util_dbg_print(WIFI_BLASTER, "%s:%d: CPU Usage : 0\n", __func__, __LINE__,
+    wifi_util_dbg_print(WIFI_BLASTER, "%s:%d: CPU Usage : 0 %s\n", __func__, __LINE__,
         avro_strerror());
     avro_value_get_by_name(&cpu_dr, "CPU_Usage", &drField, NULL);
     avro_value_set_branch(&drField, 1, &optional);
@@ -1116,7 +1116,7 @@ void upload_single_client_active_msmt_data(blaster_hashmap_t *sta_info)
             avro_strerror());
     }
 
-    wifi_util_dbg_print(WIFI_BLASTER, "%s:%d: Memory Usage : 0\n", __func__, __LINE__,
+    wifi_util_dbg_print(WIFI_BLASTER, "%s:%d: Memory Usage : 0 %s\n", __func__, __LINE__,
         avro_strerror());
     avro_value_get_by_name(&cpu_dr, "Memory_Usage", &drField, NULL);
     avro_value_set_branch(&drField, 1, &optional);
@@ -1126,7 +1126,7 @@ void upload_single_client_active_msmt_data(blaster_hashmap_t *sta_info)
             avro_strerror());
     }
 
-    wifi_util_dbg_print(WIFI_BLASTER, "%s:%d: Load Average : 0.0\n", __func__, __LINE__,
+    wifi_util_dbg_print(WIFI_BLASTER, "%s:%d: Load Average : 0.0 %s\n", __func__, __LINE__,
         avro_strerror());
     avro_value_get_by_name(&cpu_dr, "Load_Average", &drField, NULL);
     avro_value_set_branch(&drField, 1, &optional);
