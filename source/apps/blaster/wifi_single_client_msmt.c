@@ -248,6 +248,20 @@ static void printBlastMetricData(single_client_msmt_type_t msmtType, wifi_actvie
     }
 }
 
+static char *get_frequency_band_from_radio_index(int radioIndex,
+    radio_data_t *radio_stats[])
+{
+    if (strstr("2.4GHz", radio_stats[radioIndex]->frequency_band)) {
+        return "radio_2_4G";
+    } else if (strstr("5GHz", radio_stats[radioIndex]->frequency_band)) {
+        return "radio_5G";
+    } else if (strstr("6GHz", radio_stats[radioIndex]->frequency_band)) {
+        return "radio_6G";
+    }
+
+    return "Not_found";
+}
+
 void upload_single_client_active_msmt_data(blaster_hashmap_t *sta_info)
 {
     char *telemetry_buf = NULL;
@@ -721,21 +735,12 @@ void upload_single_client_active_msmt_data(blaster_hashmap_t *sta_info)
         if ( CHK_AVRO_ERR ) {
              wifi_util_dbg_print(WIFI_BLASTER, "%s:%d: Avro error: %s\n", __func__, __LINE__, avro_strerror());
         }
-        if (RadioCount == 0)
-        {
-            wifi_util_dbg_print(WIFI_BLASTER, "RDK_LOG_DEBUG, radio number set to : \"%s\"\n", "radio_2_4G");
-            avro_value_set_enum(&optional, avro_schema_enum_get_by_name(avro_value_get_schema(&optional), "radio_2_4G"));
-        }
-        else if (RadioCount == 1)
-        {
-            wifi_util_dbg_print(WIFI_BLASTER, "RDK_LOG_DEBUG, radio number set to : \"%s\"\n", "radio_5G");
-            avro_value_set_enum(&optional, avro_schema_enum_get_by_name(avro_value_get_schema(&optional), "radio_5G"));
-        } else if (RadioCount == 2) {
-            wifi_util_dbg_print(WIFI_BLASTER, "RDK_LOG_DEBUG, radio number set to : \"%s\"\n",
-                "radio_6G");
-            avro_value_set_enum(&optional,
-                avro_schema_enum_get_by_name(avro_value_get_schema(&optional), "radio_6G"));
-        }
+
+        char *radio_name = get_frequency_band_from_radio_index(RadioCount, radio_stats);
+        wifi_util_dbg_print(WIFI_BLASTER, "RDK_LOG_DEBUG, radio number set to : \"%s\"\n",
+            radio_name);
+        avro_value_set_enum(&optional,
+            avro_schema_enum_get_by_name(avro_value_get_schema(&optional), radio_name));
 
         //noise_floor
         avro_value_get_by_name(&rdr, "noise_floor", &brdrField, NULL);
