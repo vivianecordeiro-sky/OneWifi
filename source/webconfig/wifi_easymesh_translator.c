@@ -357,10 +357,11 @@ webconfig_error_t translate_radio_object_to_easymesh_for_radio(webconfig_subdoc_
                         (oper_param->operatingClasses[i].opClass == em_op_class_info->op_class) &&
                         ( em_op_class_info->id.type) == em_op_class_type_capability ) {
                     em_op_class_info->op_class = oper_param->operatingClasses[i].opClass;
+                    em_op_class_info->id.op_class = oper_param->operatingClasses[i].opClass;
                     em_op_class_info->max_tx_power = oper_param->operatingClasses[i].maxTxPower;
-                    em_op_class_info->num_non_op_channels = oper_param->operatingClasses[i].numberOfNonOperChan;
+                    em_op_class_info->num_channels = oper_param->operatingClasses[i].numberOfNonOperChan;
                     for(int k = 0; k < oper_param->operatingClasses[i].numberOfNonOperChan; k++) {
-                        em_op_class_info->non_op_channel[k] = oper_param->operatingClasses[i].nonOperable[k];
+                        em_op_class_info->channels[k] = oper_param->operatingClasses[i].nonOperable[k];
                     }
                     break;
                 }
@@ -370,12 +371,12 @@ webconfig_error_t translate_radio_object_to_easymesh_for_radio(webconfig_subdoc_
                 em_op_class_info = proto->get_op_class_info(proto->data_model, j);
                 mac_address_from_name(radio_iface_map->interface_name,em_op_class_info->id.ruid);
                 em_op_class_info->id.type = em_op_class_type_capability;
-                em_op_class_info->id.index = no_of_opclass;
+                em_op_class_info->id.op_class = oper_param->operatingClasses[i].opClass;
                 em_op_class_info->op_class = oper_param->operatingClasses[i].opClass;
                 em_op_class_info->max_tx_power = oper_param->operatingClasses[i].maxTxPower;
-                em_op_class_info->num_non_op_channels = oper_param->operatingClasses[i].numberOfNonOperChan;
+                em_op_class_info->num_channels = oper_param->operatingClasses[i].numberOfNonOperChan;
                 for(int k = 0; k < oper_param->operatingClasses[j].numberOfNonOperChan; k++) {
-                    em_op_class_info->non_op_channel[k] = oper_param->operatingClasses[i].nonOperable[k];
+                    em_op_class_info->channels[k] = oper_param->operatingClasses[i].nonOperable[k];
                 }
                 no_of_opclass++;
                 proto->set_num_op_class(proto->data_model, no_of_opclass);
@@ -389,6 +390,7 @@ webconfig_error_t translate_radio_object_to_easymesh_for_radio(webconfig_subdoc_
                     (oper_param->operatingClass == em_op_class_info->op_class) &&
                     (em_op_class_info->id.type == em_op_class_type_current )) {
                 em_op_class_info->op_class = oper_param->operatingClass;
+                em_op_class_info->id.op_class = oper_param->operatingClass;
                 em_op_class_info->channel = oper_param->channel;
                 break;
             }
@@ -398,7 +400,7 @@ webconfig_error_t translate_radio_object_to_easymesh_for_radio(webconfig_subdoc_
             em_op_class_info = proto->get_op_class_info(proto->data_model, j);
             mac_address_from_name(radio_iface_map->interface_name,em_op_class_info->id.ruid);
             em_op_class_info->id.type = em_op_class_type_current;
-            em_op_class_info->id.index = no_of_opclass;
+            em_op_class_info->id.op_class = oper_param->operatingClass;
             em_op_class_info->op_class = oper_param->operatingClass;
             em_op_class_info->channel = oper_param->channel;
             no_of_opclass++;
@@ -481,12 +483,12 @@ webconfig_error_t translate_radio_object_to_easymesh_for_dml(webconfig_subdoc_da
             em_op_class_info = proto->get_op_class_info(proto->data_model, j);
             mac_address_from_name(radio_iface_map->interface_name, em_op_class_info->id.ruid);
             em_op_class_info->id.type = 2;
-            em_op_class_info->id.index = j;
+            em_op_class_info->id.op_class = oper_param->operatingClasses[j].opClass;
             em_op_class_info->op_class = oper_param->operatingClasses[j].opClass;
             em_op_class_info->max_tx_power = oper_param->operatingClasses[j].maxTxPower;
-            em_op_class_info->num_non_op_channels = oper_param->operatingClasses[j].numberOfNonOperChan;
+            em_op_class_info->num_channels = oper_param->operatingClasses[j].numberOfNonOperChan;
             for(int i = 0; i < oper_param->operatingClasses[j].numberOfNonOperChan; i++) {
-                em_op_class_info->non_op_channel[i] = oper_param->operatingClasses[j].nonOperable[i];
+                em_op_class_info->channels[i] = oper_param->operatingClasses[j].nonOperable[i];
             }
         }
         //Update current operating class
@@ -494,6 +496,7 @@ webconfig_error_t translate_radio_object_to_easymesh_for_dml(webconfig_subdoc_da
         mac_address_from_name(radio_iface_map->interface_name,em_op_class_info->id.ruid);
         em_op_class_info->id.type = 1;
         em_op_class_info->op_class = oper_param->operatingClass;
+        em_op_class_info->id.op_class = oper_param->operatingClass;
         em_op_class_info->channel = oper_param->channel;
 
         //Incrementing the number of operating classes by one, as the dml lacks an operating class for current.
