@@ -546,9 +546,16 @@ webconfig_error_t encode_preassoc_object(const wifi_preassoc_control_t *preassoc
     } else {
         cJSON_AddStringToObject(preassoc, "6GOpInfoMinRate", preassoc_info->sixGOpInfoMinRate);
     }
-  
-    cJSON_AddNumberToObject(preassoc, "TimeInMs", preassoc_info->time_ms);
-    cJSON_AddNumberToObject(preassoc, "MinMgmtFrames", preassoc_info->min_num_mgmt_frames);
+    wifi_util_dbg_print(WIFI_WEBCONFIG,"%s:%d: Encoding preassoc settings passed\n", __func__, __LINE__);
+
+    return webconfig_error_none;
+}
+
+
+webconfig_error_t encode_tcm_preassoc_object(const wifi_preassoc_control_t *preassoc_info, cJSON *preassoc)
+{
+    cJSON_AddNumberToObject(preassoc, "TcmWaitTime", preassoc_info->time_ms);
+    cJSON_AddNumberToObject(preassoc, "TcmMinMgmtFrames", preassoc_info->min_num_mgmt_frames);
     if(strlen((char *)preassoc_info->tcm_exp_weightage) == 0) {
         cJSON_AddStringToObject(preassoc, "TcmExpWeightage", TCM_WEIGH);
     } else {
@@ -559,10 +566,11 @@ webconfig_error_t encode_preassoc_object(const wifi_preassoc_control_t *preassoc
     } else {
         cJSON_AddStringToObject(preassoc, "TcmGradientThreshold", preassoc_info->tcm_gradient_threshold);
     }
-    wifi_util_dbg_print(WIFI_WEBCONFIG,"%s:%d: Encoding preassoc settings passed\n", __func__, __LINE__);
+    wifi_util_dbg_print(WIFI_WEBCONFIG,"%s:%d: Encoding tcm preassoc settings passed\n", __func__, __LINE__);
 
     return webconfig_error_none;
 }
+
 
 webconfig_error_t encode_connection_ctrl_object(const wifi_vap_info_t *vap_info, cJSON *vap_obj)
 {
@@ -575,6 +583,13 @@ webconfig_error_t encode_connection_ctrl_object(const wifi_vap_info_t *vap_info,
     cJSON_AddItemToObject(vap_obj, "PreAssociationDeny", obj);
     if (encode_preassoc_object(&vap_info->u.bss_info.preassoc, obj) != webconfig_error_none) {
         wifi_util_error_print(WIFI_WEBCONFIG, "%s:%d Preassoc object encode failed for %s\n",__FUNCTION__, __LINE__, vap_info->vap_name);
+        return webconfig_error_encode;
+    }
+
+    obj = cJSON_CreateObject();
+    cJSON_AddItemToObject(vap_obj, "TcmPreAssociationDeny", obj);
+    if (encode_tcm_preassoc_object(&vap_info->u.bss_info.preassoc, obj) != webconfig_error_none) {
+        wifi_util_error_print(WIFI_WEBCONFIG, "%s:%d TcmPreassoc object encode failed for %s\n",__FUNCTION__, __LINE__, vap_info->vap_name);
         return webconfig_error_encode;
     }
 

@@ -9670,13 +9670,13 @@ PreAssocDeny_GetParamIntValue
     }
 
     /* check the parameter name and return the corresponding value */
-    if( AnscEqualString(ParamName, "TimeInMs", TRUE))
+    if( AnscEqualString(ParamName, "TcmWaitTime", TRUE))
     {
         *pInt = pcfg->u.bss_info.preassoc.time_ms;
         return TRUE;
     }
 
-    if( AnscEqualString(ParamName, "MinMgmtFrames", TRUE))
+    if( AnscEqualString(ParamName, "TcmMinMgmtFrames", TRUE))
     {
         *pInt = pcfg->u.bss_info.preassoc.min_num_mgmt_frames;
         return TRUE;
@@ -9961,7 +9961,7 @@ PreAssocDeny_SetParamIntValue
         return TRUE;
     }
     /* check the parameter name and return the corresponding value */
-    if( AnscEqualString(ParamName, "TimeInMs", TRUE))
+    if( AnscEqualString(ParamName, "TcmWaitTime", TRUE))
     {
         if (vapInfo->u.bss_info.preassoc.time_ms == iValue) {
             return TRUE;
@@ -9973,7 +9973,7 @@ PreAssocDeny_SetParamIntValue
         return TRUE;
     }
 
-    if( AnscEqualString(ParamName, "MinMgmtFrames", TRUE))
+    if( AnscEqualString(ParamName, "TcmMinMgmtFrames", TRUE))
     {
         if (vapInfo->u.bss_info.preassoc.min_num_mgmt_frames == iValue) {
             return TRUE;
