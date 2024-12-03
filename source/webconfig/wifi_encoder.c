@@ -35,6 +35,8 @@
 #include "wifi_ctrl.h"
 #include "wifi_util.h"
 
+#define TCM_WEIGH "0.6"
+#define TCMTHRESHOLD "0.18"
 webconfig_error_t encode_radio_setup_object(const rdk_wifi_vap_map_t *vap_map, cJSON *radio_object)
 {
     cJSON *obj_array, *obj;
@@ -544,7 +546,19 @@ webconfig_error_t encode_preassoc_object(const wifi_preassoc_control_t *preassoc
     } else {
         cJSON_AddStringToObject(preassoc, "6GOpInfoMinRate", preassoc_info->sixGOpInfoMinRate);
     }
-
+  
+    cJSON_AddNumberToObject(preassoc, "TimeInMs", preassoc_info->time_ms);
+    cJSON_AddNumberToObject(preassoc, "MinMgmtFrames", preassoc_info->min_num_mgmt_frames);
+    if(strlen((char *)preassoc_info->tcm_exp_weightage) == 0) {
+        cJSON_AddStringToObject(preassoc, "TcmExpWeightage", TCM_WEIGH);
+    } else {
+        cJSON_AddStringToObject(preassoc, "TcmExpWeightage", preassoc_info->tcm_exp_weightage);
+    }
+    if(strlen((char *)preassoc_info->tcm_gradient_threshold) == 0) {
+        cJSON_AddStringToObject(preassoc, "TcmGradientThreshold", TCMTHRESHOLD);
+    } else {
+        cJSON_AddStringToObject(preassoc, "TcmGradientThreshold", preassoc_info->tcm_gradient_threshold);
+    }
     wifi_util_dbg_print(WIFI_WEBCONFIG,"%s:%d: Encoding preassoc settings passed\n", __func__, __LINE__);
 
     return webconfig_error_none;

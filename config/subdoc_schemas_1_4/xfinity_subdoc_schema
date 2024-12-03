@@ -47,7 +47,11 @@
                     "BasicDataTransmitRates": "12",
                     "OperationalDataTransmitRates": "12,24,36,48,54",
                     "SupportedDataTransmitRates": "12,24,36,48,54",
-                    "MinimumAdvertisedMCS": "3"
+                    "MinimumAdvertisedMCS": "3",
+                    "TimeInMs": 150,
+                    "MinMgmtFrames": 3,
+                    "TcmExpWeightage": "0.6",
+                    "TcmGradientThreshold": "0.18"
                 },
                 "PostAssociationDeny": {
                     "RssiUpThreshold": "-70",
@@ -144,7 +148,11 @@
                 "BasicDataTransmitRates": "12",
                 "OperationalDataTransmitRates": "12,24,36,48,54",
                 "SupportedDataTransmitRates": "12,24,36,48,54",
-                "MinimumAdvertisedMCS": "3"
+                "MinimumAdvertisedMCS": "3",
+                "TimeInMs": 150,
+                "MinMgmtFrames": 3,
+                "TcmExpWeightage": "0.6",
+                "TcmGradientThreshold": "0.18"
             },
             "PostAssociationDeny": {
                 "RssiUpThreshold": "-70",
@@ -239,7 +247,11 @@
                     "BasicDataTransmitRates": "12",
                     "OperationalDataTransmitRates": "12,24,36,48,54",
                     "SupportedDataTransmitRates": "12,24,36,48,54",
-                    "MinimumAdvertisedMCS": "3"
+                    "MinimumAdvertisedMCS": "3",
+                    "TimeInMs": 150,
+                    "MinMgmtFrames": 3,
+                    "TcmExpWeightage": "0.6",
+                    "TcmGradientThreshold": "0.18"
                 },
                 "PostAssociationDeny": {
                     "RssiUpThreshold": "-70",
@@ -336,7 +348,11 @@
                 "BasicDataTransmitRates": "12",
                 "OperationalDataTransmitRates": "12,24,36,48,54",
                 "SupportedDataTransmitRates": "12,24,36,48,54",
-                "MinimumAdvertisedMCS": "3"
+                "MinimumAdvertisedMCS": "3",
+                "TimeInMs": 150,
+                "MinMgmtFrames": 3,
+                "TcmExpWeightage": "0.6",
+                "TcmGradientThreshold": "0.18"
             },
             "PostAssociationDeny": {
                 "RssiUpThreshold": "-70",
@@ -434,7 +450,11 @@
                 "OperationalDataTransmitRates": "12,24,36,48,54",
                 "SupportedDataTransmitRates": "12,24,36,48,54",
                 "MinimumAdvertisedMCS": "3",
-                "6GOpInfoMinRate": ""
+                "6GOpInfoMinRate": "",
+                "TimeInMs": 150,
+                "MinMgmtFrames": 3,
+                "TcmExpWeightage": "0.6",
+                "TcmGradientThreshold": "0.18"
             },
             "PostAssociationDeny": {
                 "RssiUpThreshold": "-70",
@@ -532,7 +552,11 @@
                 "OperationalDataTransmitRates": "12,24,36,48,54",
                 "SupportedDataTransmitRates": "12,24,36,48,54",
                 "MinimumAdvertisedMCS": "3",
-                "6GOpInfoMinRate": ""
+                "6GOpInfoMinRate": "",
+                "TimeInMs": 150,
+                "MinMgmtFrames": 3,
+                "TcmExpWeightage": "0.6",
+                "TcmGradientThreshold": "0.18"
             },
             "PostAssociationDeny": {
                 "RssiUpThreshold": "-70",

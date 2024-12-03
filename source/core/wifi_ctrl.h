@@ -377,6 +377,7 @@ wifi_vap_security_t * Get_wifi_object_sta_security_parameter(uint8_t vapIndex);
 char *get_assoc_devices_blob();
 void get_subdoc_name_from_vap_index(uint8_t vap_index, int* subdoc);
 int dfs_nop_start_timer(void *args);
+int webconfig_send_full_associate_status(wifi_ctrl_t *ctrl);
 
 #ifdef __cplusplus
 }

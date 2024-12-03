@@ -112,9 +112,12 @@ void print_wifi_hal_vap_wps_data(wifi_dbg_type_t log_file_type, char *prefix, un
     wifi_util_info_print(log_file_type,"%s:%d: [%s] Wifi_wps_Config vap_index=%d\n enable:%d\n methods:%d\r\n", __func__, __LINE__, prefix, vap_index, l_wifi_wps->enable, l_wifi_wps->methods);
 }
 
-#define WEBCONFIG_DML_SUBDOC_STATES (ctrl_webconfig_state_vap_all_cfg_rsp_pending| \
-                                     ctrl_webconfig_state_macfilter_cfg_rsp_pending| \
-                                     ctrl_webconfig_state_factoryreset_cfg_rsp_pending)
+#define WEBCONFIG_DML_SUBDOC_STATES                         \
+    (ctrl_webconfig_state_vap_all_cfg_rsp_pending |         \
+        ctrl_webconfig_state_macfilter_cfg_rsp_pending |    \
+        ctrl_webconfig_state_factoryreset_cfg_rsp_pending | \
+        ctrl_webconfig_state_sta_conn_status_rsp_pending |  \
+        ctrl_webconfig_state_vap_mesh_sta_cfg_rsp_pending)
 
 int webconfig_blaster_apply(wifi_ctrl_t *ctrl, webconfig_subdoc_decoded_data_t *data)
 {
@@ -398,12 +401,12 @@ int webconfig_analyze_pending_states(wifi_ctrl_t *ctrl)
             }
         break;
         case ctrl_webconfig_state_sta_conn_status_rsp_pending:
-            type = webconfig_subdoc_type_mesh_sta;
+            type = webconfig_subdoc_type_dml;
             webconfig_send_vap_subdoc_status(ctrl, type);
         break;
         case ctrl_webconfig_state_vap_mesh_sta_cfg_rsp_pending:
             if (check_wifi_vap_sched_timeout_active_status(ctrl, isVapSTAMesh) == false) {
-                type = webconfig_subdoc_type_mesh_sta;
+                type = webconfig_subdoc_type_dml;
                 webconfig_send_vap_subdoc_status(ctrl, type);
             } else {
                 return RETURN_OK;
@@ -434,13 +437,8 @@ int webconfig_analyze_pending_states(wifi_ctrl_t *ctrl)
             webconfig_send_dml_subdoc_status(ctrl);
             break;
         case ctrl_webconfig_state_factoryreset_cfg_rsp_pending:
-            if(ctrl->network_mode == rdk_dev_mode_type_gw) {
-                type = webconfig_subdoc_type_dml;
-                webconfig_send_dml_subdoc_status(ctrl);
-            } else  if(ctrl->network_mode == rdk_dev_mode_type_ext) {
-                type = webconfig_subdoc_type_mesh_sta;
-                webconfig_send_vap_subdoc_status(ctrl, type);
-            }
+            type = webconfig_subdoc_type_dml;
+            webconfig_send_dml_subdoc_status(ctrl);
         break;
         case ctrl_webconfig_state_wifi_config_cfg_rsp_pending:
             type = webconfig_subdoc_type_wifi_config;
@@ -485,7 +483,11 @@ static bool is_preassoc_cac_config_changed(wifi_vap_info_t *old, wifi_vap_info_t
         || (IS_STR_CHANGED(old->u.bss_info.preassoc.operational_data_transmit_rates, new->u.bss_info.preassoc.operational_data_transmit_rates, sizeof(old->u.bss_info.preassoc.operational_data_transmit_rates)))
         || (IS_STR_CHANGED(old->u.bss_info.preassoc.supported_data_transmit_rates, new->u.bss_info.preassoc.supported_data_transmit_rates, sizeof(old->u.bss_info.preassoc.supported_data_transmit_rates)))
         || (IS_STR_CHANGED(old->u.bss_info.preassoc.minimum_advertised_mcs, new->u.bss_info.preassoc.minimum_advertised_mcs, sizeof(old->u.bss_info.preassoc.minimum_advertised_mcs)))
-        || (IS_STR_CHANGED(old->u.bss_info.preassoc.sixGOpInfoMinRate, new->u.bss_info.preassoc.sixGOpInfoMinRate, sizeof(old->u.bss_info.preassoc.sixGOpInfoMinRate)))) {
+        || (IS_STR_CHANGED(old->u.bss_info.preassoc.sixGOpInfoMinRate, new->u.bss_info.preassoc.sixGOpInfoMinRate, sizeof(old->u.bss_info.preassoc.sixGOpInfoMinRate)))
+        || (IS_CHANGED(old->u.bss_info.preassoc.time_ms, new->u.bss_info.preassoc.time_ms))
+        || (IS_CHANGED(old->u.bss_info.preassoc.min_num_mgmt_frames, new->u.bss_info.preassoc.min_num_mgmt_frames))
+        || (IS_STR_CHANGED(old->u.bss_info.preassoc.tcm_exp_weightage, new->u.bss_info.preassoc.tcm_exp_weightage, sizeof(old->u.bss_info.preassoc.tcm_exp_weightage)))
+        || (IS_STR_CHANGED(old->u.bss_info.preassoc.tcm_gradient_threshold, new->u.bss_info.preassoc.tcm_gradient_threshold, sizeof(old->u.bss_info.preassoc.tcm_gradient_threshold)))) {
         return true;
     } else {
         return false;
