@@ -988,6 +988,7 @@ int start_wifi_health_monitor_thread(void)
 int scan_results_callback(int radio_index, wifi_bss_info_t **bss, unsigned int *num)
 {
     scan_results_t  res;
+    wifi_ctrl_t *ctrl = (wifi_ctrl_t *)get_wifictrl_obj();
     memset(&res, 0, sizeof(scan_results_t));
 
     res.radio_index = radio_index;
@@ -1000,8 +1001,10 @@ int scan_results_callback(int radio_index, wifi_bss_info_t **bss, unsigned int *
         res.num = *num;
         memcpy((unsigned char *)res.bss, (unsigned char *)(*bss), (*num)*sizeof(wifi_bss_info_t));
     }
-
-    push_event_to_ctrl_queue(&res, sizeof(scan_results_t), wifi_event_type_hal_ind, wifi_event_scan_results, NULL);
+    if (ctrl->network_mode == rdk_dev_mode_type_ext) {
+        push_event_to_ctrl_queue(&res, sizeof(scan_results_t), wifi_event_type_hal_ind,
+            wifi_event_scan_results, NULL);
+    }
     free(*bss);
 
     return 0;
@@ -1652,6 +1655,7 @@ int start_wifi_ctrl(wifi_ctrl_t *ctrl)
 
     ctrl_queue_timeout_scheduler_tasks(ctrl);
     ctrl->webconfig_state = ctrl_webconfig_state_associated_clients_full_cfg_rsp_pending;
+    webconfig_send_full_associate_status(ctrl);
     ctrl->exit_ctrl = false;
     ctrl->ctrl_initialized = true;
     ctrl_queue_loop(ctrl);
@@ -2454,6 +2458,8 @@ wifi_rfc_dml_parameters_t *get_ctrl_rfc_parameters(void)
         g_wifi_mgr->rfc_dml_parameters.wifi_offchannelscan_app_rfc;
     g_wifi_mgr->ctrl.rfc_params.wifi_offchannelscan_sm_rfc =
         g_wifi_mgr->rfc_dml_parameters.wifi_offchannelscan_sm_rfc;
+    g_wifi_mgr->ctrl.rfc_params.tcm_enabled_rfc =
+        g_wifi_mgr->rfc_dml_parameters.tcm_enabled_rfc;
     strcpy(g_wifi_mgr->ctrl.rfc_params.rfc_id, g_wifi_mgr->rfc_dml_parameters.rfc_id);
     return &g_wifi_mgr->ctrl.rfc_params;
 }

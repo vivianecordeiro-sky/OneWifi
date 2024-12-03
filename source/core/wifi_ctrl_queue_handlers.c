@@ -2151,6 +2151,17 @@ void process_levl_rfc(bool type)
     return;
 }
 
+void process_tcm_rfc(bool type)
+{
+    wifi_util_dbg_print(WIFI_DB, "Enter func %s: %d : Tcm RFC: %d\n", __FUNCTION__, __LINE__,
+        type);
+    wifi_rfc_dml_parameters_t *rfc_param = (wifi_rfc_dml_parameters_t *)get_ctrl_rfc_parameters();
+    rfc_param->tcm_enabled_rfc = type;
+    get_wifidb_obj()->desc.update_rfc_config_fn(0, rfc_param);
+    wifi_util_dbg_print(WIFI_DB, "Exit func %s: %d : Tcm RFC: %d\n", __FUNCTION__, __LINE__,
+        type);
+}
+
 void process_wps_command_event(unsigned int vap_index)
 {
     wifi_util_info_print(WIFI_CTRL,"%s:%d wifi wps test vap index = %d\n",__func__, __LINE__, vap_index);
@@ -2312,12 +2323,7 @@ void process_device_mode_command_event(int device_mode)
             start_gateway_vaps();
         }
     }
-    if(device_mode == rdk_dev_mode_type_gw) {
-        ctrl->webconfig_state |= ctrl_webconfig_state_vap_all_cfg_rsp_pending;
-    } else if (device_mode == rdk_dev_mode_type_ext) {
-        /* Null out VIF table by sending NULL subdoc */
-        ctrl->webconfig_state |= ctrl_webconfig_state_vap_mesh_cfg_rsp_pending;
-    }
+    ctrl->webconfig_state |= ctrl_webconfig_state_vap_all_cfg_rsp_pending;
 }
 
 void process_sta_trigger_disconnection(unsigned int disconnection_type)
@@ -3106,6 +3112,10 @@ void handle_command_event(wifi_ctrl_t *ctrl, void *data, unsigned int len,
 
     case wifi_event_type_prefer_private_rfc:
         process_prefer_private_rfc(*(bool *)data);
+        break;
+
+    case wifi_event_type_tcm_rfc:
+        process_tcm_rfc(*(bool *)data);
         break;
 
     case wifi_event_type_trigger_disconnection:

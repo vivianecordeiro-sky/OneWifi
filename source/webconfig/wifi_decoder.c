@@ -35,6 +35,8 @@
 #include "wifi_ctrl.h"
 #include "wifi_util.h"
 
+#define TCM_EXPWEIGHT "0.6"
+#define TCM_GRADTHRESHOLD "0.18"
 //This Macro ONE_WIFI_CHANGES, used to modify the validator changes. Re-check is required where the macro is used
 #define ONE_WIFI_CHANGES
 
@@ -3399,7 +3401,7 @@ webconfig_error_t decode_preassoc_cac_object(const cJSON *preassoc, wifi_preasso
 {
     const cJSON *param;
     int val, ret;
-
+    float fval;
     // RssiUpThreshold
     decode_param_allow_empty_string(preassoc, "RssiUpThreshold", param);
 
@@ -3534,6 +3536,42 @@ webconfig_error_t decode_preassoc_cac_object(const cJSON *preassoc, wifi_preasso
    else {
             strcpy((char *)preassoc_info->sixGOpInfoMinRate, "disabled");
    }
+  
+    decode_param_integer(preassoc, "TimeInMs", param);
+    preassoc_info->time_ms = param->valuedouble;
+
+    decode_param_integer(preassoc, "MinMgmtFrames", param);
+    preassoc_info->min_num_mgmt_frames = param->valuedouble;
+
+    decode_param_allow_empty_string(preassoc, "TcmExpWeightage", param);
+    if ((strcmp(param->valuestring, TCM_EXPWEIGHT) == 0) || (strlen(param->valuestring) == 0)) {
+        strcpy((char *)preassoc_info->tcm_exp_weightage, TCM_EXPWEIGHT);
+    } else {
+        ret = sscanf(param->valuestring, "%f", &fval);
+
+        if (ret != 1) {
+            wifi_util_dbg_print(WIFI_WEBCONFIG,"%s:%d Incorrect format.\n", __FUNCTION__,__LINE__);
+            return webconfig_error_decode;
+        }
+
+        strcpy((char *)preassoc_info->tcm_exp_weightage, param->valuestring);
+    }
+
+    decode_param_allow_empty_string(preassoc, "TcmGradientThreshold", param);
+    if ((strcmp(param->valuestring, TCM_GRADTHRESHOLD) == 0) || (strlen(param->valuestring) == 0)) {
+        strcpy((char *)preassoc_info->tcm_gradient_threshold, TCM_GRADTHRESHOLD);
+    } else {
+        ret = sscanf(param->valuestring, "%f", &fval);
+
+        if (ret != 1) {
+            wifi_util_dbg_print(WIFI_WEBCONFIG,"%s:%d Incorrect format \n", __FUNCTION__,__LINE__);
+            return webconfig_error_decode;
+        }
+
+        strcpy((char *)preassoc_info->tcm_gradient_threshold, param->valuestring);
+    }
+    wifi_util_dbg_print(WIFI_WEBCONFIG,"%s:%d: decoding preassoc settings passed\n", __func__, __LINE__);
+  
     return webconfig_error_none;
 }
 
@@ -4640,8 +4678,10 @@ webconfig_error_t decode_radio_neighbor_stats_object(wifi_provider_response_t **
             return webconfig_error_decode;
         }
 
-        decode_param_string(neighbor_stats, "ap_SSID", param);
-        strncpy(neighbor_stats_data[count].ap_SSID, param->valuestring, sizeof(neighbor_stats_data[count].ap_SSID) - 1);
+        param = cJSON_GetObjectItem(neighbor_stats, "ap_SSID");
+        if ((param != NULL) && (param->valuestring != NULL)) {
+            strncpy(neighbor_stats_data[count].ap_SSID, param->valuestring, sizeof(neighbor_stats_data[count].ap_SSID) - 1);
+        }
 
         decode_param_string(neighbor_stats, "ap_BSSID", param);
         strncpy(neighbor_stats_data[count].ap_BSSID, param->valuestring, sizeof(neighbor_stats_data[count].ap_BSSID) - 1);
@@ -4702,25 +4742,27 @@ webconfig_error_t decode_assocdev_stats_object(wifi_provider_response_t **assoc_
 {
     cJSON *assoc_stats_arr;
     cJSON *assoc_data;
-    const cJSON  *param;
+    const cJSON *param;
     int size = 0;
     wifi_associated_dev3_t *client_stats_data = NULL;
 
     if (json == NULL) {
-        wifi_util_error_print(WIFI_WEBCONFIG,"%s:%d: cjson object is NULL\n", __func__, __LINE__);
+        wifi_util_error_print(WIFI_WEBCONFIG, "%s:%d: cjson object is NULL\n", __func__, __LINE__);
         return webconfig_error_decode;
     }
 
     assoc_stats_arr = cJSON_GetObjectItem(json, "AssociatedDeviceStats");
     if ((assoc_stats_arr == NULL) && (cJSON_IsObject(assoc_stats_arr) == false)) {
-        wifi_util_error_print(WIFI_WEBCONFIG, "%s:%d: Stats config object not present\n", __func__, __LINE__);
+        wifi_util_error_print(WIFI_WEBCONFIG, "%s:%d: Stats config object not present\n", __func__,
+            __LINE__);
         return webconfig_error_invalid_subdoc;
     }
     size = cJSON_GetArraySize(assoc_stats_arr);
 
-    *assoc_stats = (wifi_provider_response_t*) calloc(1, sizeof(wifi_provider_response_t));
+    *assoc_stats = (wifi_provider_response_t *)calloc(1, sizeof(wifi_provider_response_t));
     if (*assoc_stats == NULL) {
-        wifi_util_error_print(WIFI_WEBCONFIG, "%s:%d Failed to allocate memory\n", __func__, __LINE__);
+        wifi_util_error_print(WIFI_WEBCONFIG, "%s:%d Failed to allocate memory\n", __func__,
+            __LINE__);
         return webconfig_error_decode;
     }
 
@@ -4730,13 +4772,15 @@ webconfig_error_t decode_assocdev_stats_object(wifi_provider_response_t **assoc_
     if (size == 0) {
         (*assoc_stats)->stat_pointer = NULL;
         (*assoc_stats)->stat_array_size = 0;
-        wifi_util_info_print(WIFI_WEBCONFIG, "%s:%d: Associated Device stats array size is %d\n", __func__, __LINE__, (*assoc_stats)->stat_array_size);
+        wifi_util_info_print(WIFI_WEBCONFIG, "%s:%d: Associated Device stats array size is %d\n",
+            __func__, __LINE__, (*assoc_stats)->stat_array_size);
         return webconfig_error_none;
     } else {
-        client_stats_data = (wifi_associated_dev3_t*) malloc(sizeof(wifi_associated_dev3_t) * size);
+        client_stats_data = (wifi_associated_dev3_t *)malloc(sizeof(wifi_associated_dev3_t) * size);
         if (client_stats_data == NULL) {
             free(*assoc_stats);
-            wifi_util_error_print(WIFI_WEBCONFIG, "%s:%d Failed to allocate memory\n", __func__, __LINE__);
+            wifi_util_error_print(WIFI_WEBCONFIG, "%s:%d Failed to allocate memory\n", __func__,
+                __LINE__);
             return webconfig_error_decode;
         }
     }
@@ -4744,7 +4788,8 @@ webconfig_error_t decode_assocdev_stats_object(wifi_provider_response_t **assoc_
     for (int count = 0; count < size; count++) {
         assoc_data = cJSON_GetArrayItem(assoc_stats_arr, count);
         if (assoc_data == NULL) {
-            wifi_util_error_print(WIFI_WEBCONFIG, "%s:%d: null Json Pointer for : %d \n", __func__, __LINE__, count);
+            wifi_util_error_print(WIFI_WEBCONFIG, "%s:%d: null Json Pointer for : %d \n", __func__,
+                __LINE__, count);
             return webconfig_error_decode;
         }
 
@@ -4752,7 +4797,8 @@ webconfig_error_t decode_assocdev_stats_object(wifi_provider_response_t **assoc_
         string_mac_to_uint8_mac(client_stats_data[count].cli_MACAddress, param->valuestring);
 
         decode_param_bool(assoc_data, "cli_AuthenticationState", param);
-        client_stats_data[count].cli_AuthenticationState = (param->type & cJSON_True) ? true:false;
+        client_stats_data[count].cli_AuthenticationState = (param->type & cJSON_True) ? true :
+                                                                                        false;
 
         decode_param_integer(assoc_data, "cli_LastDataDownlinkRate", param);
         client_stats_data[count].cli_LastDataDownlinkRate = param->valuedouble;
@@ -4767,19 +4813,24 @@ webconfig_error_t decode_assocdev_stats_object(wifi_provider_response_t **assoc_
         client_stats_data[count].cli_Retransmissions = param->valuedouble;
 
         decode_param_bool(assoc_data, "cli_Active", param);
-        client_stats_data[count].cli_Active = (param->type & cJSON_True) ? true:false;
+        client_stats_data[count].cli_Active = (param->type & cJSON_True) ? true : false;
 
         decode_param_allow_empty_string(assoc_data, "cli_OperatingStandard", param);
-        strncpy(client_stats_data[count].cli_OperatingStandard, param->valuestring, sizeof(client_stats_data[count].cli_OperatingStandard) - 1);
+        strncpy(client_stats_data[count].cli_OperatingStandard, param->valuestring,
+            sizeof(client_stats_data[count].cli_OperatingStandard) - 1);
 
         decode_param_allow_empty_string(assoc_data, "cli_OperatingChannelBandwidth", param);
-        strncpy(client_stats_data[count].cli_OperatingChannelBandwidth, param->valuestring, sizeof(client_stats_data[count].cli_OperatingChannelBandwidth) - 1);
+        strncpy(client_stats_data[count].cli_OperatingChannelBandwidth, param->valuestring,
+            sizeof(client_stats_data[count].cli_OperatingChannelBandwidth) - 1);
 
         decode_param_integer(assoc_data, "cli_SNR", param);
         client_stats_data[count].cli_SNR = param->valuedouble;
 
-        decode_param_allow_empty_string(assoc_data, "cli_InterferenceSources", param);
-        strncpy(client_stats_data[count].cli_InterferenceSources, param->valuestring, sizeof(client_stats_data[count].cli_InterferenceSources) - 1);
+        param = cJSON_GetObjectItem(assoc_data, "cli_InterferenceSources");
+        if (param != NULL) {
+            strncpy(client_stats_data[count].cli_InterferenceSources, param->valuestring,
+                sizeof(client_stats_data[count].cli_InterferenceSources) - 1);
+        }
 
         decode_param_integer(assoc_data, "cli_DataFramesSentAck", param);
         client_stats_data[count].cli_DataFramesSentAck = param->valuedouble;
@@ -4795,6 +4846,9 @@ webconfig_error_t decode_assocdev_stats_object(wifi_provider_response_t **assoc_
 
         decode_param_integer(assoc_data, "cli_Retransmissions", param);
         client_stats_data[count].cli_Retransmissions = param->valuedouble;
+
+        decode_param_integer(assoc_data, "cli_RSSI", param);
+        client_stats_data[count].cli_RSSI = param->valuedouble;
 
         decode_param_integer(assoc_data, "cli_MinRSSI", param);
         client_stats_data[count].cli_MinRSSI = param->valuedouble;
