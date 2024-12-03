@@ -4760,6 +4760,7 @@ webconfig_error_t decode_assocdev_stats_object(wifi_provider_response_t **assoc_
     size = cJSON_GetArraySize(assoc_stats_arr);
 
     *assoc_stats = (wifi_provider_response_t *)calloc(1, sizeof(wifi_provider_response_t));
+
     if (*assoc_stats == NULL) {
         wifi_util_error_print(WIFI_WEBCONFIG, "%s:%d Failed to allocate memory\n", __func__,
             __LINE__);
