@@ -2871,13 +2871,13 @@ INSTMSMT_PH2 -->
                                             <writable>true</writable>
                                         </parameter>
                                         <parameter>
-                                            <name>TimeInMs</name>
+                                            <name>TcmWaitTime</name>
                                             <type>int</type>
                                             <syntax>int</syntax>
                                             <writable>true</writable>
                                         </parameter>
                                         <parameter>
-                                            <name>MinMgmtFrames</name>
+                                            <name>TcmMinMgmtFrames</name>
                                             <type>int</type>
                                             <syntax>int</syntax>
                                             <writable>true</writable>
