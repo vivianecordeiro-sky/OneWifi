@@ -878,7 +878,7 @@ int execute_radio_channel_api(wifi_mon_collector_element_t *c_elem, wifi_monitor
     } else {
         dwell_time = args->dwell_time;
         if (dwell_time == 0) {
-            dwell_time = 10;
+            dwell_time = 20;
         }
         if (args->scan_mode == WIFI_RADIO_SCAN_MODE_ONCHAN) {
             // make sure dwell time is less than 20ms if DFS channel
@@ -887,9 +887,7 @@ int execute_radio_channel_api(wifi_mon_collector_element_t *c_elem, wifi_monitor
                 radioOperation->band == WIFI_FREQUENCY_5_BAND) {
                 if (is_5g_20M_channel_in_dfs(radioOperation->channel) ||
                     radioOperation->channelWidth == WIFI_CHANNELBANDWIDTH_160MHZ) {
-                    if (dwell_time > 20) {
-                        dwell_time = 20;
-                    }
+                    dwell_time = 20;
                 }
             }
         }
