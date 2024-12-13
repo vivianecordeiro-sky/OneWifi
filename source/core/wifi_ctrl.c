@@ -1700,6 +1700,37 @@ bool check_wifi_radio_sched_timeout_active_status(wifi_ctrl_t *l_ctrl)
     return false;
 }
 
+bool check_wifi_csa_sched_timeout_active_status_of_radio_index(wifi_ctrl_t *l_ctrl, int radio_index)
+{
+    wifi_scheduler_id_t *sched_id = &l_ctrl->wifi_sched_id;
+
+    if (radio_index < 0 || radio_index >= getNumberRadios()) {
+        // Invalid index
+        return false;
+    }
+
+    if (sched_id->wifi_csa_sched_handler_id[radio_index] != 0) {
+        return true;
+    }
+    return false;
+}
+
+bool check_wifi_radio_sched_timeout_active_status_of_radio_index(wifi_ctrl_t *l_ctrl,
+    int radio_index)
+{
+    wifi_scheduler_id_t *sched_id = &l_ctrl->wifi_sched_id;
+
+    if (radio_index < 0 || radio_index >= getNumberRadios()) {
+        // Invalid index
+        return false;
+    }
+
+    if (sched_id->wifi_radio_sched_handler_id[radio_index] != 0) {
+        return true;
+    }
+    return false;
+}
+
 bool check_wifi_vap_sched_timeout_active_status(wifi_ctrl_t *l_ctrl, BOOL (*cb)(UINT apIndex))
 {
     unsigned int index = 0;
@@ -1711,6 +1742,15 @@ bool check_wifi_vap_sched_timeout_active_status(wifi_ctrl_t *l_ctrl, BOOL (*cb)(
         }
     }
 
+    return false;
+}
+
+bool check_wifi_multivap_sched_timeout_active_status(wifi_ctrl_t *l_ctrl, int radio_index)
+{
+    //TBD: Check all the sched handler of the VAP associated with the radio_index
+    wifi_mgr_t *mgr = (wifi_mgr_t *)get_wifimgr_obj();
+
+    // Currently returning false
     return false;
 }
 
