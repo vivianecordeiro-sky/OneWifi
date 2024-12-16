@@ -25,8 +25,6 @@ extern "C"
 {
 #endif
 
-#include "em_base.h"
-
 typedef unsigned int (*ext_proto_get_num_radio_t)(void *data_model);
 typedef void (*ext_proto_set_num_radio_t)(void *data_model, unsigned int num_radio);
 typedef unsigned int (*ext_proto_get_num_op_class_t)(void *data_model);
