@@ -3011,6 +3011,32 @@ static void process_monitor_init_command(void)
     free(data);
 }
 
+void process_send_action_frame_command(void *data, unsigned int len)
+{
+    action_frame_params_t *params;
+
+    if (data == NULL) {
+        wifi_util_error_print(WIFI_CTRL, "%s:%d NUll data Pointer\n", __func__, __LINE__);
+        return;
+    }
+
+    if (len < sizeof(action_frame_params_t) + 1) {
+        wifi_util_error_print(WIFI_CTRL, "%s:%d Invalid parameter size \r\n", __func__, __LINE__);
+        return;
+    }
+
+    params = (action_frame_params_t *)data;
+
+    if (wifi_sendActionFrame(params->ap_index, params->dest_addr, params->frequency,
+            params->frame_data, params->frame_len)) {
+        wifi_util_error_print(WIFI_CTRL, "%s:%d HAL sendActionFrame method failed :\r\n", __func__,
+            __LINE__);
+        return;
+    }
+
+    return;
+}
+
 void handle_command_event(wifi_ctrl_t *ctrl, void *data, unsigned int len,
     wifi_event_subtype_t subtype)
 {
@@ -3131,6 +3157,9 @@ void handle_command_event(wifi_ctrl_t *ctrl, void *data, unsigned int len,
         break;
     case wifi_event_type_notify_monitor_done:
         process_monitor_init_command();
+        break;
+    case wifi_event_type_send_action_frame:
+        process_send_action_frame_command(data, len);
         break;
     case wifi_event_type_mgmt_frame_bus_rfc:
     case wifi_event_type_sta_connect_in_progress:
