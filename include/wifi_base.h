@@ -57,6 +57,8 @@ extern "C" {
 #define WIFI_ACCESSPOINT_DIAGDATA           "Device.WiFi.AccessPoint.{i}.X_RDK_DiagData"
 #define WIFI_ACCESSPOINT_FORCE_APPLY        "Device.WiFi.AccessPoint.{i}.ForceApply"
 #define WIFI_ACCESSPOINT_RADIUS_CONNECTED_ENDPOINT   "Device.WiFi.AccessPoint.{i}.Security.ConnectedRadiusEndpoint"
+#define WIFI_ACCESSPOINT_RAWFRAME_MGMT_ACTION_TX     "Device.WiFi.AccessPoint.{i}.RawFrame.Mgmt.Action.Tx"
+#define WIFI_ACCESSPOINT_RAWFRAME_MGMT_ACTION_RX     "Device.WiFi.AccessPoint.{i}.RawFrame.Mgmt.Action.Rx"
 #define WIFI_CSI_TABLE                      "Device.WiFi.X_RDK_CSI.{i}."
 #define WIFI_CSI_DATA                       "Device.WiFi.X_RDK_CSI.{i}.data"
 #define WIFI_CSI_CLIENTMACLIST              "Device.WiFi.X_RDK_CSI.{i}.ClientMaclist"
@@ -264,6 +266,14 @@ typedef enum {
 } whix_app_event_type_t;
 
 typedef struct {
+    unsigned int ap_index;
+    mac_addr_t dest_addr;
+    unsigned int frequency;
+    unsigned int frame_len;
+    uint8_t frame_data[0];
+} __attribute__((packed)) action_frame_params_t;
+
+typedef struct {
     unsigned int            radio_index;
     unsigned int            vap_index;
     wifi_channels_list_t    channel_list;
@@ -417,6 +427,7 @@ typedef struct {
     bool blaster_enabled_rfc;
     bool greylist_enabled_rfc;
     bool cac_enabled_rfc;
+    bool tcm_enabled_rfc;
 } wifi_rfc_dml_parameters_t;
 
 typedef struct {
