@@ -251,8 +251,12 @@ bus_error_t bus_unreg_data_elements(bus_handle_t *handle, uint32_t num_of_elemen
 
 char const* bus_error_to_string(bus_error_t bus_error)
 {
-    rbusError_t ret = convert_bus_to_rbus_error_code(bus_error);
-    return rbusError_ToString(ret);
+    return NULL;
+}
+
+void *bus_convert_handle_to_ptr(bus_handle_t *handle)
+{
+    return &handle->u.he_bus_handle;
 }
 
 bus_error_t bus_event_subscribe_async(bus_handle_t *handle, char const *event_name, void *cb,
@@ -385,5 +389,5 @@ static void bus_desc_init(wifi_bus_desc_t *desc)
     desc->bus_unreg_table_row_fn          = bus_unreg_table_row;
     desc->bus_remove_table_row_fn         = bus_remove_table_row;
     desc->bus_error_to_string_fn          = bus_error_to_string;
-    desc->convert_bus_handle_to_actual_handle_fn = convert_bus_handle_to_actual_ptr;
+    desc->bus_convert_handle_to_actual_ptr_fn = bus_convert_handle_to_ptr;
 }
