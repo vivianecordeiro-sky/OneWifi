@@ -2877,12 +2877,12 @@ bus_error_t get_client_assoc_request_multi(char const* methodName, raw_data_t *i
 
     outParams->data_type = bus_data_type_bytes;
     outParams->raw_data.bytes = malloc(output_len);
-    memset(outParams->raw_data.bytes, '\0', output_len);
     if (outParams->raw_data.bytes == NULL) {
         wifi_util_error_print(WIFI_CTRL,"%s:%d memory allocation is failed:%d\r\n",__func__,
             __LINE__, output_len);
         return bus_error_out_of_resources;
     }
+    memset(outParams->raw_data.bytes, '\0', output_len);
     memcpy(outParams->raw_data.bytes, (uint8_t *)l_data, output_len);
 
     outParams->raw_data_len = output_len;
