@@ -82,8 +82,8 @@ typedef struct element_node element_node_t;
 typedef struct data_model_prop data_model_prop_t;
 typedef struct _he_bus_handle *he_bus_handle_t;
 
-typedef he_bus_error_t (*he_bus_get_handler_t)(char *event_name, he_bus_raw_data_t *p_data, he_bus_user_data_t *user_data);
-typedef he_bus_error_t (*he_bus_set_handler_t)(char *event_name, he_bus_raw_data_t *p_data, he_bus_user_data_t *user_data);
+typedef he_bus_error_t (*he_bus_get_handler_t)(char *event_name, he_bus_raw_data_t *p_data, void *user_data);
+typedef he_bus_error_t (*he_bus_set_handler_t)(char *event_name, he_bus_raw_data_t *p_data, void *user_data);
 typedef he_bus_error_t (*he_bus_table_add_row_handler_t)(char const *tableName,
     char const *aliasName, uint32_t *instNum);
 typedef he_bus_error_t (*he_bus_table_remove_row_handler_t)(char const *rowName);

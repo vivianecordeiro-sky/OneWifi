@@ -16,12 +16,12 @@
   See the License for the specific language governing permissions and
   limitations under the License.
  **************************************************************************/
+#ifndef BUS_COMMON_H
+#define BUS_COMMON_H
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <pthread.h>
-
-#ifndef BUS_COMMON_H
-#define BUS_COMMON_H
 
 #ifdef __cplusplus
 extern "C" {

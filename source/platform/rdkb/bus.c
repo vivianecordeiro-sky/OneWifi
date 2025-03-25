@@ -815,11 +815,6 @@ rbusError_t rbus_method_handler(rbusHandle_t handle, char const* methodName, rbu
             if (ret != bus_error_success) {
                 wifi_util_error_print(WIFI_BUS,"%s:%d user cb processing failed:%d for %s\n", __func__, __LINE__, ret, methodName);
             } else {
-                   wifi_util_error_print(WIFI_BUS,"%s:%d method-name : %s\n", __func__, __LINE__, (char *)methodName);
-	           if (strcmp((char *)methodName, "Device.MeshWifiOptimization.EventGetAll") == 0) {
-		       const char *payload =  bus_output_data.raw_data.bytes;
-		       wifi_util_error_print(WIFI_BUS,"%s:%d payload : %s\n", __func__, __LINE__, payload);
-		   }
                 ret = set_rbus_object_data((char *)methodName, outParams, &bus_output_data);
             }
             free_raw_data_struct(&bus_output_data);
@@ -1341,7 +1336,7 @@ bus_error_t bus_unreg_data_elements(bus_handle_t *handle, uint32_t num_of_elemen
 
     for (index = 0; index < num_of_element; index++) {
         bus_table_remove_row(get_bus_mux_reg_cb_map(), data_element[index].full_name);
-        wifi_util_error_print(WIFI_BUS, "%s:%d %s entry removed\n", __func__, __LINE__, data_element[index].full_name);
+        wifi_util_dbg_print(WIFI_BUS, "%s:%d %s entry removed\n", __func__, __LINE__, data_element[index].full_name);
     }
     free(rbus_dataElements);
 
@@ -1460,17 +1455,20 @@ bus_error_t bus_method_invoke(bus_handle_t *handle, void *paramName, char *event
     }
 
     if (outParams == NULL) {
-        wifi_util_dbg_print(WIFI_BUS, "%s %d Out param is NULL\n", __func__, __LINE__);
+        wifi_util_error_print(WIFI_BUS, "%s %d Out param is NULL\n", __func__, __LINE__);
+	return bus_error_general;
     }
 
     if ((RBUS_ERROR_SUCCESS == rc) && ((input_bus_data == BUS_METHOD_GET) || (input_bus_data == BUS_METHOD_SET_GET))) {
         prop = rbusObject_GetProperties(outParams);
         if (prop == NULL) {
-            wifi_util_dbg_print(WIFI_BUS, "%s %d prop is NULL\n", __func__, __LINE__);
+            wifi_util_error_print(WIFI_BUS, "%s %d prop is NULL\n", __func__, __LINE__);
+	    return bus_error_general;
         }
         value = rbusProperty_GetValue(prop);
         if (value == NULL) {
-            wifi_util_dbg_print(WIFI_BUS, "%s %d value is NULL\n", __func__, __LINE__);
+            wifi_util_error_print(WIFI_BUS, "%s %d value is NULL\n", __func__, __LINE__);
+	    return bus_error_general;
         }
         switch (output_data->data_type) {
         case bus_data_type_boolean:
@@ -1548,13 +1546,13 @@ bus_error_t bus_event_unsubscribe(bus_handle_t *handle, char const *event_name) 
     rbusError_t rc = bus_error_success;
     rbusHandle_t p_rbus_handle = handle->u.rbus_handle; 
     rc = rbusEvent_Unsubscribe(p_rbus_handle, event_name);
-    wifi_util_error_print(WIFI_BUS,"%s:%d rbus event name:%s, rc:%d\n", __func__, __LINE__, event_name, rc);
+    wifi_util_dbg_print(WIFI_BUS,"%s:%d rbus event name:%s, rc:%d\n", __func__, __LINE__, event_name, rc);
     if (rc != RBUS_ERROR_SUCCESS) {
         return convert_rbus_to_bus_error_code(rc);
     }
 
     bus_table_remove_row(get_bus_mux_sub_cb_map(), (char *)event_name);
-    wifi_util_error_print(WIFI_BUS,"%s:%d rbus event name:%s removed successfully\n", __func__, __LINE__, event_name);
+    wifi_util_info_print(WIFI_BUS,"%s:%d rbus event name:%s removed successfully\n", __func__, __LINE__, event_name);
 
     return convert_rbus_to_bus_error_code(rc);
 }

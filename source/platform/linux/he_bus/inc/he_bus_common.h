@@ -241,9 +241,6 @@ typedef struct he_bus_mgr {
     hash_map_t *bus_main_handle;
 } he_bus_mgr_t;
 
-typedef struct he_bus_user_data {
-    he_bus_handle_t handle;
-} he_bus_user_data_t;
 he_bus_mgr_t *get_bus_mgr_object(void);
 void *get_bus_user_cb(hash_map_t *user_cb_map, char *name);
 

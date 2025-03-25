@@ -578,7 +578,7 @@ he_bus_error_t process_bus_get_event(he_bus_handle_t handle, char *comp_name,
     VERIFY_NULL_WITH_RC(p_res_raw_data);
 
     he_bus_error_t status = he_bus_error_success;
-    he_bus_user_data_t he_bus_userdata;
+    void *he_bus_userdata;
     if (handle->root_element == NULL || p_obj_data->name_len == 0) {
         he_bus_core_error_print("%s:%d Node root element or object name is NULL - msg from:%s\r\n",
             __func__, __LINE__, comp_name);
@@ -594,8 +594,8 @@ he_bus_error_t process_bus_get_event(he_bus_handle_t handle, char *comp_name,
     } else {
         if (node->cb_table.get_handler != NULL) {
             ELM_LOCK(node->element_mutex);
-	    he_bus_userdata.handle = handle;
-            status = node->cb_table.get_handler(p_obj_data->name, p_res_raw_data, &he_bus_userdata);
+	    he_bus_userdata = handle;
+            status = node->cb_table.get_handler(p_obj_data->name, p_res_raw_data, he_bus_userdata);
             ELM_UNLOCK(node->element_mutex);
         } else {
             he_bus_core_error_print("%s:%d Node get handler is not found for :%s namespace\r\n",
@@ -612,7 +612,7 @@ he_bus_error_t process_bus_set_event(he_bus_handle_t handle, char *comp_name,
     VERIFY_NULL_WITH_RC(handle);
     VERIFY_NULL_WITH_RC(comp_name);
     VERIFY_NULL_WITH_RC(p_obj_data);
-    he_bus_user_data_t he_bus_userdata;
+    void *he_bus_userdata;
     he_bus_error_t status = he_bus_error_success;
     if (handle->root_element == NULL || p_obj_data->name_len == 0) {
         he_bus_core_error_print("%s:%d Node root element or object name is NULL - msg from:%s\r\n",
@@ -628,9 +628,9 @@ he_bus_error_t process_bus_set_event(he_bus_handle_t handle, char *comp_name,
         return he_bus_error_destination_not_found;
     } else {
         if (node->cb_table.set_handler != NULL) {
-	    he_bus_userdata.handle = handle;
+	    he_bus_userdata = handle;
             ELM_LOCK(node->element_mutex);
-            status = node->cb_table.set_handler(p_obj_data->name, &p_obj_data->data, &he_bus_userdata);
+            status = node->cb_table.set_handler(p_obj_data->name, &p_obj_data->data, he_bus_userdata);
             ELM_UNLOCK(node->element_mutex);
         } else {
             he_bus_core_error_print("%s:%d Node get handler is not found for :%s namespace\r\n",
