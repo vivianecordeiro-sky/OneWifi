@@ -1477,16 +1477,8 @@ bus_error_t bus_method_invoke(bus_handle_t *handle, void *paramName, char *event
             output_data->data_type = bus_data_type_boolean;
             break;
         case bus_data_type_string:
-            if (strcmp(event, "Device.WiFi.AP.STA.GetAssocRequest") == 0)  {
-                char *payload = rbusValue_ToString(value,NULL,0);
-		len = strlen(payload) + 1;
-                output_data->raw_data.bytes = (void *)calloc(len, sizeof(char));
-                memcpy((char *)output_data->raw_data.bytes, payload, (len-1));
-                output_data->raw_data_len = len;
-	    } else {
-                ptr = (void *)rbusValue_GetString(value, &len);
-                output_data->raw_data_len = (unsigned int)len;
-	    }
+            ptr = (void *)rbusValue_GetString(value, &len);
+            output_data->raw_data_len = (unsigned int)len;
             break;
         case bus_data_type_uint32:
             output_data->raw_data.u32 = (uint32_t)rbusValue_GetUInt32(value);
