@@ -77,6 +77,7 @@
 #define TCM_THRESHOLD "0.18"
 #define ONEWIFI_DB_VERSION_WPA3_COMP_FLAG 100032
 #define WPA3_COMPATIBILITY 8192
+#define ONEWIFI_DB_VERSION_HOSTAP_MGMT_FRAME_CTRL_FLAG 100033
 
 ovsdb_table_t table_Wifi_Radio_Config;
 ovsdb_table_t table_Wifi_VAP_Config;
@@ -4265,7 +4266,7 @@ static void wifidb_global_config_upgrade()
         wifi_util_dbg_print(WIFI_DB, "%s:%d upgrade global config, old db version %d \n", __func__, __LINE__, g_wifidb->db_version);
 
         memset(strValue, 0, sizeof(strValue));
-        str = (char *) p_ccsp_desc->psm_get_value_fn(WhixLoginterval, strValue);
+        str = (char *) p_ccsp_desc->psm_get_value_fn(WhixLoginterval, strValue, sizeof(strValue));
         if (str != NULL) {
             g_wifidb->global_config.global_parameters.whix_log_interval = atoi(str);
             wifi_util_dbg_print(WIFI_DB,"whix_log_interval is %d and str is %s \n", g_wifidb->global_config.global_parameters.whix_log_interval, str);
@@ -4278,7 +4279,7 @@ static void wifidb_global_config_upgrade()
         wifi_util_dbg_print(WIFI_DB, "%s:%d upgrade global config, old db version %d \n", __func__, __LINE__, g_wifidb->db_version);
 
         memset(strValue, 0, sizeof(strValue));
-        str = (char *) p_ccsp_desc->psm_get_value_fn(WhixChUtilityLoginterval, strValue);
+        str = (char *) p_ccsp_desc->psm_get_value_fn(WhixChUtilityLoginterval, strValue, sizeof(strValue));
         if (str != NULL) {
             g_wifidb->global_config.global_parameters.whix_chutility_loginterval = atoi(str);
             wifi_util_dbg_print(WIFI_DB,"%s:%d whix_chutility_loginterval is %d and str is %s \n", __func__, __LINE__, g_wifidb->global_config.global_parameters.whix_chutility_loginterval, str);
@@ -4429,6 +4430,18 @@ static void wifidb_vap_config_upgrade(wifi_vap_info_map_t *config, rdk_wifi_vap_
                         config->vap_array[i].u.bss_info.security.mfp);
                 wifidb_update_wifi_vap_info(config->vap_array[i].vap_name, &config->vap_array[i], &rdk_config[i]);
             }
+        }
+
+        if (g_wifidb->db_version < ONEWIFI_DB_VERSION_HOSTAP_MGMT_FRAME_CTRL_FLAG) {
+#if defined(_XB7_PRODUCT_REQ_) || defined(_XB8_PRODUCT_REQ_)
+            config->vap_array[i].u.bss_info.hostap_mgt_frame_ctrl = true;
+            wifi_util_dbg_print(WIFI_DB,
+                "%s:%d Update hostap_mgt_frame_ctrl:%d for vap_index:%d \n", __func__, __LINE__,
+                config->vap_array[i].u.bss_info.hostap_mgt_frame_ctrl,
+                config->vap_array[i].vap_index);
+            wifidb_update_wifi_vap_info(config->vap_array[i].vap_name, &config->vap_array[i],
+                &rdk_config[i]);
+#endif
         }
     }
 }
@@ -5282,25 +5295,25 @@ int ovsdb_get_radio_params(unsigned int radio_index, wifi_radio_operationParam_t
 {
     if (radio_index == 0) {
         params->band = WIFI_FREQUENCY_2_4_BAND;
-        params->op_class = 12;
+        params->operatingClass = 12;
         params->channel = 3;
         params->channelWidth = WIFI_CHANNELBANDWIDTH_20MHZ;
         params->variant = WIFI_80211_VARIANT_G;
     } else if (radio_index == 1) {
         params->band = WIFI_FREQUENCY_5_BAND;
-        params->op_class = 1;
+        params->operatingClass = 1;
         params->channel = 36;
         params->channelWidth = WIFI_CHANNELBANDWIDTH_20MHZ;
         params->variant = WIFI_80211_VARIANT_A;
     } else if (radio_index == 2) {
         params->band = WIFI_FREQUENCY_2_4_BAND;
-        params->op_class = 12;
+        params->operatingClass = 12;
         params->channel = 3;
         params->channelWidth = WIFI_CHANNELBANDWIDTH_20MHZ;
         params->variant = WIFI_80211_VARIANT_N;
     } else if (radio_index == 3) {
         params->band = WIFI_FREQUENCY_2_4_BAND;
-        params->op_class = 12;
+        params->operatingClass = 12;
         params->channel = 3;
         params->channelWidth = WIFI_CHANNELBANDWIDTH_20MHZ;
         params->variant = WIFI_80211_VARIANT_N;
@@ -6299,7 +6312,6 @@ int wifidb_init_radio_config_default(int radio_index,wifi_radio_operationParam_t
 
     switch (cfg.band) {
         case WIFI_FREQUENCY_2_4_BAND:
-            cfg.op_class = 12;
             cfg.operatingClass = 81;
             cfg.channel = 1;
             cfg.channelWidth = WIFI_CHANNELBANDWIDTH_20MHZ;
@@ -6322,7 +6334,6 @@ int wifidb_init_radio_config_default(int radio_index,wifi_radio_operationParam_t
             break;
         case WIFI_FREQUENCY_5_BAND:
         case WIFI_FREQUENCY_5L_BAND:
-            cfg.op_class = 128;
             cfg.operatingClass = 128;
 #if defined (_PP203X_PRODUCT_REQ_)
             cfg.beaconInterval = 200;
@@ -6340,7 +6351,6 @@ int wifidb_init_radio_config_default(int radio_index,wifi_radio_operationParam_t
 #endif /* CONFIG_IEEE80211BE */
             break;
         case WIFI_FREQUENCY_5H_BAND:
-            cfg.op_class = 128;
             cfg.operatingClass = 128;
             cfg.channel = 157;
             cfg.channelWidth = WIFI_CHANNELBANDWIDTH_80MHZ;
@@ -6357,7 +6367,6 @@ int wifidb_init_radio_config_default(int radio_index,wifi_radio_operationParam_t
 #endif /* CONFIG_IEEE80211BE */
             break;
         case WIFI_FREQUENCY_6_BAND:
-            cfg.op_class = 131;
             cfg.operatingClass = 131;
             cfg.channel = 5;
             cfg.channelWidth = WIFI_CHANNELBANDWIDTH_160MHZ;
@@ -6717,6 +6726,12 @@ int wifidb_init_vap_config_default(int vap_index, wifi_vap_info_t *config,
         }
 #endif // NEWPLATFORM_PORT
 #endif //_SKY_HUB_COMMON_PRODUCT_REQ_
+
+#if defined(_XB7_PRODUCT_REQ_) || defined(_XB8_PRODUCT_REQ_)
+        cfg.u.bss_info.hostap_mgt_frame_ctrl = true;
+        wifi_util_dbg_print(WIFI_DB, "%s:%d vap_index:%d hostap_mgt_frame_ctrl:%d\n", __func__,
+            __LINE__, vap_index, cfg.u.bss_info.hostap_mgt_frame_ctrl);
+#endif
 
         memset(ssid, 0, sizeof(ssid));
 
@@ -7382,7 +7397,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
 
     memset(strValue, 0, sizeof(strValue));
 #ifndef NEWPLATFORM_PORT
-    str = p_ccsp_desc->psm_get_value_fn(WiFivAPStatsFeatureEnable, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(WiFivAPStatsFeatureEnable, strValue, sizeof(strValue));
     if (str != NULL) {
         convert_ascii_string_to_bool(str, &global_cfg->vap_stats_feature);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->vap_stats_feature; is %d and str is %s\n", global_cfg->vap_stats_feature, str);
@@ -7391,7 +7406,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(WifiVlanCfgVersion, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(WifiVlanCfgVersion, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->vlan_cfg_version = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->vlan_cfg_version is %d and str is %s and atoi(str) is %d\n", global_cfg->vlan_cfg_version, str, atoi(str));
@@ -7400,7 +7415,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(PreferPrivate, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(PreferPrivate, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->prefer_private = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->prefer_private is %d and str is %s and atoi(str) is %d\n", global_cfg->prefer_private, str, atoi(str));
@@ -7409,7 +7424,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(NotifyWiFiChanges, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(NotifyWiFiChanges, strValue, sizeof(strValue));
     if (str != NULL) {
         convert_ascii_string_to_bool(str, &global_cfg->notify_wifi_changes);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->notify_wifi_changes is %d and str is %s\n", global_cfg->notify_wifi_changes, str);
@@ -7418,7 +7433,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(DiagnosticEnable, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(DiagnosticEnable, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->diagnostic_enable = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->diagnostic_enable is %d and str is %s and atoi(str) is %d\n", global_cfg->diagnostic_enable, str, atoi(str));
@@ -7427,7 +7442,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(GoodRssiThreshold, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(GoodRssiThreshold, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->good_rssi_threshold = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->good_rssi_threshold is %d and str is %s and atoi(str) is %d\n", global_cfg->good_rssi_threshold, str, atoi(str));
@@ -7436,7 +7451,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(AssocCountThreshold, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(AssocCountThreshold, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->assoc_count_threshold = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->assoc_count_threshold is %d and str is %s and atoi(str) is %d\n", global_cfg->assoc_count_threshold, str, atoi(str));
@@ -7445,7 +7460,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(AssocMonitorDuration, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(AssocMonitorDuration, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->assoc_monitor_duration = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->assoc_monitor_duration is %d and str is %s and atoi(str) is %d\n", global_cfg->assoc_monitor_duration, str, atoi(str));
@@ -7454,7 +7469,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(AssocGateTime, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(AssocGateTime, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->assoc_gate_time = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->assoc_gate_time is %d and str is %s and atoi(str) is %d\n", global_cfg->assoc_gate_time, str, atoi(str));
@@ -7463,7 +7478,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(WhixLoginterval, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(WhixLoginterval, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->whix_log_interval = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->whix_log_interval is %d and str is %s and atoi(str) is %d\n", global_cfg->whix_log_interval, str, atoi(str));
@@ -7472,7 +7487,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(WhixChUtilityLoginterval, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(WhixChUtilityLoginterval, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->whix_chutility_loginterval = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"%s:%d global_cfg->whix_chutility_log_interval is %d and str is %s and atoi(str) is %d\n", __func__, __LINE__, global_cfg->whix_chutility_loginterval, str, atoi(str));
@@ -7481,7 +7496,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(RapidReconnectIndicationEnable, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(RapidReconnectIndicationEnable, strValue, sizeof(strValue));
     if (str != NULL) {
         convert_ascii_string_to_bool(str, &global_cfg->rapid_reconnect_enable);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->rapid_reconnect_enable is %d and str is %s\n", global_cfg->rapid_reconnect_enable, str);
@@ -7490,7 +7505,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(FeatureMFPConfig, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(FeatureMFPConfig, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->mfp_config_feature = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->mfp_config_feature is %d and str is %s and atoi(str) is %d\n", global_cfg->mfp_config_feature, str, atoi(str));
@@ -7499,7 +7514,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(WiFiTxOverflowSelfheal, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(WiFiTxOverflowSelfheal, strValue, sizeof(strValue));
     if (str != NULL) {
         convert_ascii_string_to_bool(str, &global_cfg->tx_overflow_selfheal);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->tx_overflow_selfheal is %d and str is %s\n", global_cfg->tx_overflow_selfheal, str);
@@ -7508,7 +7523,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(WiFiForceDisableWiFiRadio, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(WiFiForceDisableWiFiRadio, strValue, sizeof(strValue));
     if (str != NULL) {
         convert_ascii_string_to_bool(str, &global_cfg->force_disable_radio_feature);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->force_disable_radio_feature is %d and str is %s\n", global_cfg->force_disable_radio_feature, str);
@@ -7517,7 +7532,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(WiFiForceDisableRadioStatus, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(WiFiForceDisableRadioStatus, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->force_disable_radio_status = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->force_disable_radio_status is %d and str is %s and atoi(str) is %d\n", global_cfg->force_disable_radio_status, str, atoi(str));
@@ -7526,7 +7541,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(ValidateSSIDName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(ValidateSSIDName, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->validate_ssid = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->validate_ssid is %d and str is %s and atoi(str) is %d\n", global_cfg->validate_ssid, str, atoi(str));
@@ -7535,7 +7550,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(FixedWmmParams, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(FixedWmmParams, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->fixed_wmm_params = atoi(strValue);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->fixed_wmm_params is %d and str is %s and atoi(str) is %d\n", global_cfg->fixed_wmm_params, str, atoi(str));
@@ -7545,7 +7560,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
 
     memset(strValue, 0, sizeof(strValue));
 #endif // NEWPLATFORM_PORT
-    str = p_ccsp_desc->psm_get_value_fn(TR181_WIFIREGION_Code, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(TR181_WIFIREGION_Code, strValue, sizeof(strValue));
     if (str != NULL) {
         strcpy(global_cfg->wifi_region_code, str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->wifi_region_code is %s and str is %s \n", global_cfg->wifi_region_code, str);
@@ -7555,7 +7570,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
 
 #ifndef NEWPLATFORM_PORT
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(WpsPin, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(WpsPin, strValue, sizeof(strValue));
     if (str != NULL) {
         //global_cfg->wps_pin = atoi(str);
         strcpy(global_cfg->wps_pin, str);
@@ -7565,7 +7580,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(PreferPrivateConfigure, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(PreferPrivateConfigure, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->prefer_private_configure = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->prefer_private_configure is %d and str is %s and atoi(str) is %d\n", global_cfg->prefer_private_configure, str, atoi(str));
@@ -7574,7 +7589,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(FactoryReset, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(FactoryReset, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->factory_reset = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->factory_reset is %d and str is %s and atoi(str) is %d\n", global_cfg->factory_reset, str, atoi(str));
@@ -7583,7 +7598,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(BandSteer_Enable, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(BandSteer_Enable, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->bandsteering_enable = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->bandsteering_enable is %d and str is %s and atoi(str) is %d\n", global_cfg->bandsteering_enable, str, atoi(str));
@@ -7592,7 +7607,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(InstWifiClientEnabled, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(InstWifiClientEnabled, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->inst_wifi_client_enabled = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->inst_wifi_client_enabled is %d and str is %s and atoi(str) is %d\n", global_cfg->inst_wifi_client_enabled, str, atoi(str));
@@ -7601,7 +7616,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(InstWifiClientReportingPeriod, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(InstWifiClientReportingPeriod, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->inst_wifi_client_reporting_period = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->inst_wifi_client_reporting_period is %d and str is %s and atoi(str) is %d\n", global_cfg->inst_wifi_client_reporting_period, str, atoi(str));
@@ -7610,7 +7625,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(InstWifiClientMacAddress, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(InstWifiClientMacAddress, strValue, sizeof(strValue));
     if (str != NULL) {
         str_to_mac_bytes(str, global_cfg->inst_wifi_client_mac);
         //strncpy(global_cfg->inst_wifi_client_mac,str,sizeof(global_cfg->inst_wifi_client_mac)-1);
@@ -7620,7 +7635,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(InstWifiClientDefReportingPeriod, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(InstWifiClientDefReportingPeriod, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->inst_wifi_client_def_reporting_period = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->inst_wifi_client_def_reporting_period is %d and str is %s and atoi(str) is %d\n", global_cfg->inst_wifi_client_def_reporting_period, str, atoi(str));
@@ -7629,7 +7644,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(WiFiActiveMsmtEnabled, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(WiFiActiveMsmtEnabled, strValue, sizeof(strValue));
     if (str != NULL) {
         convert_ascii_string_to_bool(str, &global_cfg->wifi_active_msmt_enabled);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->wifi_active_msmt_enabled is %d and str is %s\r\n", global_cfg->wifi_active_msmt_enabled, str);
@@ -7638,7 +7653,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(WiFiActiveMsmtPktSize, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(WiFiActiveMsmtPktSize, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->wifi_active_msmt_pktsize = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->wifi_active_msmt_pktsize is %d and str is %s and atoi(str) is %d\n", global_cfg->wifi_active_msmt_pktsize, str, atoi(str));
@@ -7647,7 +7662,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(WiFiActiveMsmtNumberOfSample, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(WiFiActiveMsmtNumberOfSample, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->wifi_active_msmt_num_samples = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->wifi_active_msmt_num_samples is %d and str is %s and atoi(str) is %d\n", global_cfg->wifi_active_msmt_num_samples, str, atoi(str));
@@ -7656,7 +7671,7 @@ int wifi_db_update_global_config(wifi_global_param_t *global_cfg)
     }
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(WiFiActiveMsmtSampleDuration, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(WiFiActiveMsmtSampleDuration, strValue, sizeof(strValue));
     if (str != NULL) {
         global_cfg->wifi_active_msmt_sample_duration = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"global_cfg->wifi_active_msmt_sample_duration is %d and str is %s and atoi(str) is %d\n", global_cfg->wifi_active_msmt_sample_duration, str, atoi(str));
@@ -7680,14 +7695,16 @@ int get_total_mac_list_from_psm(int instance_number, unsigned int *total_entries
     int l_total_entries = 0;
     char recName[256] = {0};
     char strValue[256] = {0};
+    char mac_strValue[256] = {0};
     char *l_strValue = NULL;
     wifi_ccsp_desc_t *p_ccsp_desc = &get_wificcsp_obj()->desc;
 
     memset(recName, '\0', sizeof(recName));
     snprintf(recName, sizeof(recName), MacFilterList, instance_number);
     memset(strValue, 0, sizeof(strValue));
+    memset(mac_strValue, 0, sizeof(mac_strValue));
     wifi_util_dbg_print(WIFI_MGR, "%s:%d  recName: %s instance_number:%d\n",__func__, __LINE__, recName, instance_number);
-    l_strValue = p_ccsp_desc->psm_get_value_fn(recName, l_strValue);
+    l_strValue = p_ccsp_desc->psm_get_value_fn(recName, mac_strValue, sizeof(mac_strValue));
     if ((l_strValue != NULL) && (strlen(l_strValue) > 0))
     {
         wifi_util_dbg_print(WIFI_MGR, "%s:%d  mac list data:%s\n",__func__, __LINE__, l_strValue);
@@ -7726,7 +7743,7 @@ void get_radio_params_from_psm(unsigned int radio_index, wifi_radio_operationPar
         memset(recName, 0, sizeof(recName));
         memset(strValue, 0, sizeof(strValue));
         snprintf(recName, sizeof(recName), Tscan, instance_number);
-        str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+        str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
         if (str != NULL) {
             radio_feat_cfg->OffChanTscanInMsec = atoi(str);
             wifi_util_dbg_print(WIFI_MGR,"radio_feat_cfg->OffChanTscanInMsec is %d and str is %s and atoi(str) is %d\n", radio_feat_cfg->OffChanTscanInMsec, str, atoi(str));
@@ -7737,7 +7754,7 @@ void get_radio_params_from_psm(unsigned int radio_index, wifi_radio_operationPar
         memset(recName, 0, sizeof(recName));
         memset(strValue, 0, sizeof(strValue));
         snprintf(recName, sizeof(recName), Nscan, instance_number);
-        str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+        str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
         if (str != NULL) {
             radio_feat_cfg->OffChanNscanInSec = atoi(str);
             wifi_util_dbg_print(WIFI_MGR,"radio_feat_cfg->OffChanNscanInSec is %d and str is %s and atoi(str) is %d\n", radio_feat_cfg->OffChanNscanInSec, str, atoi(str));
@@ -7748,7 +7765,7 @@ void get_radio_params_from_psm(unsigned int radio_index, wifi_radio_operationPar
         memset(recName, 0, sizeof(recName));
         memset(strValue, 0, sizeof(strValue));
         snprintf(recName, sizeof(recName), Tidle, instance_number);
-        str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+        str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
         if (str != NULL) {
             radio_feat_cfg->OffChanTidleInSec = atoi(str);
             wifi_util_dbg_print(WIFI_MGR,"radio_feat_cfg->OffChanTidleInSec is %d and str is %s and atoi(str) is %d\n", radio_feat_cfg->OffChanTidleInSec, str, atoi(str));
@@ -7761,7 +7778,7 @@ void get_radio_params_from_psm(unsigned int radio_index, wifi_radio_operationPar
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), CTSProtection, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         radio_cfg->ctsProtection = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"radio_cfg->ctsProtection is %d and str is %s and atoi(str) is %d\n", radio_cfg->ctsProtection, str, atoi(str));
@@ -7772,7 +7789,7 @@ void get_radio_params_from_psm(unsigned int radio_index, wifi_radio_operationPar
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), BeaconInterval, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         radio_cfg->beaconInterval = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"radio_cfg->beaconInterval is %d and str is %s and atoi(str) is %d\n", radio_cfg->beaconInterval, str, atoi(str));
@@ -7783,7 +7800,7 @@ void get_radio_params_from_psm(unsigned int radio_index, wifi_radio_operationPar
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), DTIMInterval, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         radio_cfg->dtimPeriod = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"radio_cfg->dtimPeriod is %d and str is %s and atoi(str) is %d\n", radio_cfg->dtimPeriod, str, atoi(str));
@@ -7794,7 +7811,7 @@ void get_radio_params_from_psm(unsigned int radio_index, wifi_radio_operationPar
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), FragThreshold, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         radio_cfg->fragmentationThreshold = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"radio_cfg->fragmentationThreshold is %d and str is %s and atoi(str) is %d\n", radio_cfg->fragmentationThreshold, str, atoi(str));
@@ -7805,7 +7822,7 @@ void get_radio_params_from_psm(unsigned int radio_index, wifi_radio_operationPar
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), RTSThreshold, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         radio_cfg->rtsThreshold = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"radio_cfg->rtsThreshold is %d and str is %s and atoi(str) is %d\n", radio_cfg->rtsThreshold, str, atoi(str));
@@ -7816,7 +7833,7 @@ void get_radio_params_from_psm(unsigned int radio_index, wifi_radio_operationPar
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), ObssCoex, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         radio_cfg->obssCoex = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"radio_cfg->obssCoex is %d and str is %s and atoi(str) is %d\n", radio_cfg->obssCoex, str, atoi(str));
@@ -7827,7 +7844,7 @@ void get_radio_params_from_psm(unsigned int radio_index, wifi_radio_operationPar
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), STBCEnable, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         radio_cfg->stbcEnable = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"radio_cfg->stbcEnable is %d and str is %s and atoi(str) is %d\n", radio_cfg->stbcEnable, str, atoi(str));
@@ -7838,7 +7855,7 @@ void get_radio_params_from_psm(unsigned int radio_index, wifi_radio_operationPar
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), GuardInterval, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         radio_cfg->guardInterval = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"radio_cfg->guardInterval is %d and str is %s and atoi(str) is %d\n", radio_cfg->guardInterval, str, atoi(str));
@@ -7849,7 +7866,7 @@ void get_radio_params_from_psm(unsigned int radio_index, wifi_radio_operationPar
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), GreenField, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         radio_cfg->greenFieldEnable = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"radio_cfg->greenFieldEnable is %d and str is %s and atoi(str) is %d\n", radio_cfg->greenFieldEnable, str, atoi(str));
@@ -7860,7 +7877,7 @@ void get_radio_params_from_psm(unsigned int radio_index, wifi_radio_operationPar
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), TransmitPower, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         radio_cfg->transmitPower = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"radio_cfg->transmitPower is %d and str is %s and atoi(str) is %d\n", radio_cfg->transmitPower, str, atoi(str));
@@ -7871,7 +7888,7 @@ void get_radio_params_from_psm(unsigned int radio_index, wifi_radio_operationPar
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), UserControl, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         radio_cfg->userControl = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"radio_cfg->userControl is %d and str is %s and atoi(str) is %d\n", radio_cfg->userControl, str, atoi(str));
@@ -7882,7 +7899,7 @@ void get_radio_params_from_psm(unsigned int radio_index, wifi_radio_operationPar
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), AdminControl, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         radio_cfg->adminControl = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"radio_cfg->adminControl is %d and str is %s and atoi(str) is %d\n", radio_cfg->adminControl, str, atoi(str));
@@ -7893,7 +7910,7 @@ void get_radio_params_from_psm(unsigned int radio_index, wifi_radio_operationPar
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), MeasuringRateRd, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         radio_cfg->radioStatsMeasuringRate = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"radio_cfg->chanUtilThreshold is %d and str is %s and ansc_atoi-str is %d\n", radio_cfg->chanUtilThreshold, str, atoi(str));
@@ -7904,7 +7921,7 @@ void get_radio_params_from_psm(unsigned int radio_index, wifi_radio_operationPar
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), MeasuringIntervalRd, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         radio_cfg->radioStatsMeasuringInterval = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"radio_cfg->radioStatsMeasuringInterval is %d and str is %s and atoi(str) is %d\n", radio_cfg->radioStatsMeasuringInterval, str, atoi(str));
@@ -7915,7 +7932,7 @@ void get_radio_params_from_psm(unsigned int radio_index, wifi_radio_operationPar
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), SetChanUtilThreshold, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         radio_cfg->chanUtilThreshold = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"radio_cfg->chanUtilThreshold is %d and str is %s and ansc_atoi-str is %d\n", radio_cfg->chanUtilThreshold, str, atoi(str));
@@ -7926,7 +7943,7 @@ void get_radio_params_from_psm(unsigned int radio_index, wifi_radio_operationPar
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), SetChanUtilSelfHealEnable, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         radio_cfg->chanUtilSelfHealEnable = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"radio_cfg->chanUtilSelfHealEnable is %d and str is %s and atoi(str) is %d\n", radio_cfg->chanUtilSelfHealEnable, str, atoi(str));
@@ -8009,7 +8026,7 @@ void get_psm_mac_list_entry(unsigned int instance_number, char *l_vap_name, unsi
         memset(recName, 0, sizeof(recName));
         memset(strValue, 0, sizeof(strValue));
         snprintf(recName, sizeof(recName), MacFilterDevice, instance_number, index);
-        str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+        str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
         if (str != NULL) {
             strcpy(temp_psm_mac_param->device_name, str);
             wifi_util_dbg_print(WIFI_MGR,"psm get device_name is %s\r\n", str);
@@ -8020,7 +8037,7 @@ void get_psm_mac_list_entry(unsigned int instance_number, char *l_vap_name, unsi
         memset(recName, 0, sizeof(recName));
         memset(strValue, 0, sizeof(strValue));
         snprintf(recName, sizeof(recName), MacFilter, instance_number, index);
-        str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+        str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
         if (str != NULL) {
             str_to_mac_bytes(str, temp_psm_mac_param->mac);
             wifi_util_dbg_print(WIFI_MGR,"psm get mac is %s\n", str);
@@ -8059,7 +8076,7 @@ int get_vap_params_from_psm(unsigned int vap_index, wifi_vap_info_t *vap_config,
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), WmmEnable, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         bss_cfg->wmm_enabled = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"bss_cfg->wmm_enabled is %d and str is %s and atoi(str) is %d\n", bss_cfg->wmm_enabled, str, atoi(str));
@@ -8070,7 +8087,7 @@ int get_vap_params_from_psm(unsigned int vap_index, wifi_vap_info_t *vap_config,
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), UAPSDEnable, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         bss_cfg->UAPSDEnabled = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"bss_cfg->UAPSDEnabled is %d and str is %s and atoi(str) is %d\n", bss_cfg->UAPSDEnabled, str, atoi(str));
@@ -8081,7 +8098,7 @@ int get_vap_params_from_psm(unsigned int vap_index, wifi_vap_info_t *vap_config,
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), vAPStatsEnable, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         convert_ascii_string_to_bool(str, (bool *)&bss_cfg->vapStatsEnable);
         wifi_util_dbg_print(WIFI_MGR,"bss_cfg->vapStatsEnable is %d and str is %s\n", bss_cfg->vapStatsEnable, str);
@@ -8092,7 +8109,7 @@ int get_vap_params_from_psm(unsigned int vap_index, wifi_vap_info_t *vap_config,
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), WmmNoAck, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         bss_cfg->wmmNoAck = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"bss_cfg->wmmNoAck is %d and str is %s and atoi(str) is %d\n", bss_cfg->wmmNoAck, str, atoi(str));
@@ -8103,7 +8120,7 @@ int get_vap_params_from_psm(unsigned int vap_index, wifi_vap_info_t *vap_config,
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), BssMaxNumSta, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         if ((isVapPrivate(vap_config->vap_index)) && (atoi(str) == 0)) {
             bss_cfg->bssMaxSta = wifi_mgr->hal_cap.wifi_prop.BssMaxStaAllow;
@@ -8119,7 +8136,7 @@ int get_vap_params_from_psm(unsigned int vap_index, wifi_vap_info_t *vap_config,
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), MacFilterMode, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         unsigned int mf_mode = atoi(str);
         if (mf_mode == 0) {
@@ -8140,7 +8157,7 @@ int get_vap_params_from_psm(unsigned int vap_index, wifi_vap_info_t *vap_config,
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), ApIsolationEnable, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         bss_cfg->isolation = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"bss_cfg->isolation is %d and str is %s and atoi(str) is %d\n", bss_cfg->isolation, str, atoi(str));
@@ -8151,7 +8168,7 @@ int get_vap_params_from_psm(unsigned int vap_index, wifi_vap_info_t *vap_config,
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), BSSTransitionActivated, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         convert_ascii_string_to_bool(str, (bool *)&bss_cfg->bssTransitionActivated);
         wifi_util_dbg_print(WIFI_MGR,"bss_cfg->bssTransitionActivated is %d and str is %s\n", bss_cfg->bssTransitionActivated, str);
@@ -8162,7 +8179,7 @@ int get_vap_params_from_psm(unsigned int vap_index, wifi_vap_info_t *vap_config,
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), BssHotSpot, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         bss_cfg->bssHotspot = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"bss_cfg->bssHotspot is %d and str is %s and atoi(str) is %d\n", bss_cfg->bssHotspot, str, atoi(str));
@@ -8173,7 +8190,7 @@ int get_vap_params_from_psm(unsigned int vap_index, wifi_vap_info_t *vap_config,
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), WpsPushButton, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         bss_cfg->wpsPushButton = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"bss_cfg->wpsPushButton is %d and str is %s and atoi(str) is %d\n", bss_cfg->wpsPushButton, str, atoi(str));
@@ -8184,7 +8201,7 @@ int get_vap_params_from_psm(unsigned int vap_index, wifi_vap_info_t *vap_config,
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), RapidReconnThreshold, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         bss_cfg->rapidReconnThreshold = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"bss_cfg->rapidReconnThreshold is %d and str is %s and atoi(str) is %d\n", bss_cfg->rapidReconnThreshold, str, atoi(str));
@@ -8195,7 +8212,7 @@ int get_vap_params_from_psm(unsigned int vap_index, wifi_vap_info_t *vap_config,
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), RapidReconnCountEnable, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         bss_cfg->rapidReconnectEnable = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"bss_cfg->rapidReconnectEnable is %d and str is %s and atoi(str) is %d\n", bss_cfg->rapidReconnectEnable, str, atoi(str));
@@ -8206,7 +8223,7 @@ int get_vap_params_from_psm(unsigned int vap_index, wifi_vap_info_t *vap_config,
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), NeighborReportActivated, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         convert_ascii_string_to_bool(str, (bool *)&bss_cfg->nbrReportActivated);
         wifi_util_dbg_print(WIFI_MGR,"bss_cfg->nbrReportActivated is %d and str is %s\n", bss_cfg->nbrReportActivated, str);
@@ -8217,7 +8234,7 @@ int get_vap_params_from_psm(unsigned int vap_index, wifi_vap_info_t *vap_config,
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), ApMFPConfig, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     int security_mfp = 0;
     if (str != NULL) {
         convert_security_mode_string_to_integer((int *)&security_mfp, str);
@@ -8229,7 +8246,7 @@ int get_vap_params_from_psm(unsigned int vap_index, wifi_vap_info_t *vap_config,
     memset(recName, 0, sizeof(recName));
     memset(strValue, 0, sizeof(strValue));
     snprintf(recName, sizeof(recName), BeaconRateCtl, instance_number);
-    str = p_ccsp_desc->psm_get_value_fn(recName, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(recName, strValue, sizeof(strValue));
     if (str != NULL) {
         strcpy(bss_cfg->beaconRateCtl,str);
         wifi_util_dbg_print(WIFI_MGR,"bss_cfg->beaconRateCtl is %s and str is %s \r\n", bss_cfg->beaconRateCtl, str);
@@ -8425,7 +8442,7 @@ int get_wifi_db_psm_enable_status(bool *wifi_psm_db_enabled)
     wifi_ccsp_desc_t *p_ccsp_desc = &get_wificcsp_obj()->desc;
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(WIFI_PSM_DB_NAMESPACE, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(WIFI_PSM_DB_NAMESPACE, strValue, sizeof(strValue));
     if (str != NULL) {
         *wifi_psm_db_enabled = atoi(str);
         wifi_util_dbg_print(WIFI_MGR,"str is %s and wifi_psm_db_enabled is %d\n", str, *wifi_psm_db_enabled);
@@ -8444,7 +8461,7 @@ int get_wifi_last_reboot_reason_psm_value(char *last_reboot_reason)
     wifi_ccsp_desc_t *p_ccsp_desc = &get_wificcsp_obj()->desc;
 
     memset(strValue, 0, sizeof(strValue));
-    str = p_ccsp_desc->psm_get_value_fn(LAST_REBOOT_REASON_NAMESPACE, strValue);
+    str = p_ccsp_desc->psm_get_value_fn(LAST_REBOOT_REASON_NAMESPACE, strValue, sizeof(strValue));
     if (str != NULL) {
         strcpy(last_reboot_reason, str);
         wifi_util_dbg_print(WIFI_MGR,"str is %s and last_reboot_reason is %s\n", str, last_reboot_reason);
