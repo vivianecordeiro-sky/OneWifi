@@ -25,7 +25,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <dbus/dbus.h>
-#include "ccsp_base_api.h" 
+#include "ccsp_base_api.h"
 #ifdef __cplusplus
 
 extern "C" {
