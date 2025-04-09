@@ -3114,8 +3114,8 @@ void process_send_action_frame_command(void *data, unsigned int len)
 
     params = (action_frame_params_t *)data;
 
-    if (wifi_sendActionFrameExt(params->ap_index, params->dest_addr, params->frequency,
-            params->wait_time_ms, params->frame_data, params->frame_len)) {
+    if (wifi_sendActionFrame(params->ap_index, params->dest_addr, params->frequency,
+            params->frame_data, params->frame_len)) {
 
         wifi_util_error_print(WIFI_CTRL,
             "%s:%d HAL sendActionFrame method failed (ap_index:%d, dest_addr:" MAC_FMT

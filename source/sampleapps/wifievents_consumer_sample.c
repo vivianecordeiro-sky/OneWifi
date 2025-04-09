@@ -325,6 +325,7 @@ static void csiMacListHandler(rbusHandle_t handle, rbusEvent_t const *event,
 
 void rotate_and_write_CSIData(mac_address_t sta_mac, wifi_csi_data_t *csi)
 {
+#if 0
 #define MB(x) ((long int)(x) << 20)
 #define CSI_FILE "/tmp/CSI.bin"
 #define CSI_TMP_FILE "/tmp/CSI_tmp.bin"
@@ -379,6 +380,36 @@ void rotate_and_write_CSIData(mac_address_t sta_mac, wifi_csi_data_t *csi)
         fclose(csifptr_tmp);
         rename(filename_tmp, filename);
     }
+#endif
+#define CSI_FILE "/tmp/CSI.txt"
+    char filename[] = CSI_FILE;
+    static FILE *csifptr = NULL;
+    unsigned int nc_idx, tone_idx, nr_idx;
+    static unsigned int sample_number = 1;
+
+    if (sample_number ==  20) {
+        return;
+    }
+    WIFI_EVENT_CONSUMER_DGB("Enter %s: %d\n", __FUNCTION__, __LINE__);
+    if (csifptr == NULL) {
+        csifptr = fopen(filename, "w+");
+        if (csifptr == NULL) {
+            WIFI_EVENT_CONSUMER_DGB("%s:%d Error opening file\n", __FUNCTION__, __LINE__);
+            return;
+        }
+    }
+    
+    fprintf(csifptr, "Sample %u, num_sc %u, Nr %u, Nc %u\n", sample_number, csi->frame_info.num_sc, csi->frame_info.Nr, csi->frame_info.Nc);
+
+    for (tone_idx = 0; tone_idx < csi->frame_info.num_sc; tone_idx++) {
+		for (nr_idx = 0; nr_idx < csi->frame_info.Nr; nr_idx++) {
+            for (nc_idx = 0; nc_idx < csi->frame_info.Nc; nc_idx++) {
+                fprintf(csifptr, "%u ", csi->csi_matrix[tone_idx][nr_idx][nc_idx]);
+		    }
+        }
+        fprintf(csifptr, "\n");
+	}
+    sample_number++;
 
     WIFI_EVENT_CONSUMER_DGB("Exit %s: %d\n", __FUNCTION__, __LINE__);
 }
