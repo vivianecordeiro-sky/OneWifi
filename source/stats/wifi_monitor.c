@@ -2582,30 +2582,30 @@ bool active_sta_connection_status(int ap_index, char *mac)
 int increment_reason_count(interop_data_t *telemetry, wifi_reason_code_t code, int ap) {
     if (ap == 0) {
         switch (code) {
-            case AWLAN_REASON_UNSPECIFIED: telemetry->sta_reason_counts[0]++; break;
-            case AWLAN_REASON_PREV_AUTH_NOT_VALID: telemetry->sta_reason_counts[1]++; break;
-            case AWLAN_REASON_DEAUTH_LEAVING: telemetry->sta_reason_counts[2]++; break;
-            case AWLAN_REASON_STA_REQ_ASSOC_WITHOUT_AUTH: telemetry->sta_reason_counts[3]++; break;
-            case AWLAN_REASON_MICHAEL_MIC_FAILURE: telemetry->sta_reason_counts[4]++; break;
-            case AWLAN_REASON_4WAY_HANDSHAKE_TIMEOUT: telemetry->sta_reason_counts[5]++; break;
-            case AWLAN_REASON_AKMP_NOT_VALID: telemetry->sta_reason_counts[6]++; break;
-            case AWLAN_REASON_IEEE_802_1X_AUTH_FAILED: telemetry->sta_reason_counts[7]++; break;
-            case AWLAN_REASON_INVALID_PMKID: telemetry->sta_reason_counts[8]++; break;
+            case WIFI_REASON_UNSPECIFIED: telemetry->sta_reason_counts[0]++; break;
+            case WIFI_REASON_PREV_AUTH_NOT_VALID: telemetry->sta_reason_counts[1]++; break;
+            case WIFI_REASON_DEAUTH_LEAVING: telemetry->sta_reason_counts[2]++; break;
+            case WIFI_REASON_STA_REQ_ASSOC_WITHOUT_AUTH: telemetry->sta_reason_counts[3]++; break;
+            case WIFI_REASON_MICHAEL_MIC_FAILURE: telemetry->sta_reason_counts[4]++; break;
+            case WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT: telemetry->sta_reason_counts[5]++; break;
+            case WIFI_REASON_AKMP_NOT_VALID: telemetry->sta_reason_counts[6]++; break;
+            case WIFI_REASON_IEEE_802_1X_AUTH_FAILED: telemetry->sta_reason_counts[7]++; break;
+            case WIFI_REASON_INVALID_PMKID: telemetry->sta_reason_counts[8]++; break;
             default: //wifi_util_dbg_print(WIFI_MON, "%s:%d unknown reason code for station \n",__FUNCTION__,__LINE__);
                   return -1;
         }
     }
     else if (ap == 1) {
         switch (code) {
-            case AWLAN_REASON_UNSPECIFIED: telemetry->ap_reason_counts[0]++; break;
-            case AWLAN_REASON_PREV_AUTH_NOT_VALID: telemetry->ap_reason_counts[1]++; break;
-            case AWLAN_REASON_DEAUTH_LEAVING: telemetry->ap_reason_counts[2]++; break;
-            case AWLAN_REASON_STA_REQ_ASSOC_WITHOUT_AUTH: telemetry->ap_reason_counts[3]++; break;
-            case AWLAN_REASON_MICHAEL_MIC_FAILURE: telemetry->ap_reason_counts[4]++; break;
-            case AWLAN_REASON_4WAY_HANDSHAKE_TIMEOUT: telemetry->ap_reason_counts[5]++; break;
-            case AWLAN_REASON_AKMP_NOT_VALID: telemetry->ap_reason_counts[6]++; break;
-            case AWLAN_REASON_IEEE_802_1X_AUTH_FAILED: telemetry->ap_reason_counts[7]++; break;
-            case AWLAN_REASON_INVALID_PMKID: telemetry->ap_reason_counts[8]++; break;
+            case WIFI_REASON_UNSPECIFIED: telemetry->ap_reason_counts[0]++; break;
+            case WIFI_REASON_PREV_AUTH_NOT_VALID: telemetry->ap_reason_counts[1]++; break;
+            case WIFI_REASON_DEAUTH_LEAVING: telemetry->ap_reason_counts[2]++; break;
+            case WIFI_REASON_STA_REQ_ASSOC_WITHOUT_AUTH: telemetry->ap_reason_counts[3]++; break;
+            case WIFI_REASON_MICHAEL_MIC_FAILURE: telemetry->ap_reason_counts[4]++; break;
+            case WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT: telemetry->ap_reason_counts[5]++; break;
+            case WIFI_REASON_AKMP_NOT_VALID: telemetry->ap_reason_counts[6]++; break;
+            case WIFI_REASON_IEEE_802_1X_AUTH_FAILED: telemetry->ap_reason_counts[7]++; break;
+            case WIFI_REASON_INVALID_PMKID: telemetry->ap_reason_counts[8]++; break;
             default: //wifi_util_dbg_print(WIFI_MON, "%s:%d unknown reason code for ap \n",__FUNCTION__,__LINE__); 
                  return -1;
         }
@@ -2620,24 +2620,24 @@ int increment_reason_count(interop_data_t *telemetry, wifi_reason_code_t code, i
 int increment_status_count(interop_data_t *telemetry, wifi_status_code_t code, int ap) {
     if (ap == 0) {
         switch (code) {
-            case AWLAN_STATUS_UNSPECIFIED_FAILURE: telemetry->sta_status_counts[0]++; break;
-            case AWLAN_STATUS_AUTH_TIMEOUT: telemetry->sta_status_counts[1]++; break;
-            case AWLAN_STATUS_ASSOC_REJECTED_TEMPORARILY: telemetry->sta_status_counts[2]++; break;
-            case AWLAN_STATUS_ROBUST_MGMT_FRAME_POLICY_VIOLATION: telemetry->sta_status_counts[3]++; break;
-            case AWLAN_STATUS_AKMP_NOT_VALID: telemetry->sta_status_counts[4]++; break;
-            case AWLAN_STATUS_INVALID_PMKID: telemetry->sta_status_counts[5]++; break;
+            case WIFI_STATUS_UNSPECIFIED_FAILURE: telemetry->sta_status_counts[0]++; break;
+            case WIFI_STATUS_AUTH_TIMEOUT: telemetry->sta_status_counts[1]++; break;
+            case WIFI_STATUS_ASSOC_REJECTED_TEMPORARILY: telemetry->sta_status_counts[2]++; break;
+            case WIFI_STATUS_ROBUST_MGMT_FRAME_POLICY_VIOLATION: telemetry->sta_status_counts[3]++; break;
+            case WIFI_STATUS_AKMP_NOT_VALID: telemetry->sta_status_counts[4]++; break;
+            case WIFI_STATUS_INVALID_PMKID: telemetry->sta_status_counts[5]++; break;
             default: //wifi_util_dbg_print(WIFI_MON, "%s:%d unknown status code for station \n",__FUNCTION__,__LINE__);
                  return -1;
         }
     }
     else if (ap == 1) {
         switch (code) { 
-            case AWLAN_STATUS_UNSPECIFIED_FAILURE: telemetry->ap_status_counts[0]++; break;
-            case AWLAN_STATUS_AUTH_TIMEOUT: telemetry->ap_status_counts[1]++; break;
-            case AWLAN_STATUS_ASSOC_REJECTED_TEMPORARILY: telemetry->ap_status_counts[2]++; break;
-            case AWLAN_STATUS_ROBUST_MGMT_FRAME_POLICY_VIOLATION: telemetry->ap_status_counts[3]++; break;
-            case AWLAN_STATUS_AKMP_NOT_VALID: telemetry->ap_status_counts[4]++; break;
-            case AWLAN_STATUS_INVALID_PMKID: telemetry->ap_status_counts[5]++; break;
+            case WIFI_STATUS_UNSPECIFIED_FAILURE: telemetry->ap_status_counts[0]++; break;
+            case WIFI_STATUS_AUTH_TIMEOUT: telemetry->ap_status_counts[1]++; break;
+            case WIFI_STATUS_ASSOC_REJECTED_TEMPORARILY: telemetry->ap_status_counts[2]++; break;
+            case WIFI_STATUS_ROBUST_MGMT_FRAME_POLICY_VIOLATION: telemetry->ap_status_counts[3]++; break;
+            case WIFI_STATUS_AKMP_NOT_VALID: telemetry->ap_status_counts[4]++; break;
+            case WIFI_STATUS_INVALID_PMKID: telemetry->ap_status_counts[5]++; break;
             default: //wifi_util_dbg_print(WIFI_MON, "%s:%d unknown status code for ap \n",__FUNCTION__,__LINE__); 
                  return -1;
         }
