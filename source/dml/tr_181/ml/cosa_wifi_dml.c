@@ -7444,7 +7444,7 @@ AccessPoint_SetParamIntValue
 
     if( AnscEqualString(ParamName, "InteropNumSta", TRUE))
     {
-        if (vapInfo->u.bss_info.inum_sta == iValue)
+        if (vapInfo->u.bss_info.inum_sta == (UINT)iValue)
         {
             return  TRUE;
         }
