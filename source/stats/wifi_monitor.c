@@ -2580,7 +2580,7 @@ bool active_sta_connection_status(int ap_index, char *mac)
     return true;
 }
 
-int increment_reason_count(interop_data_t *telemetry, WlanReasonCode code, int ap) {
+int increment_reason_count(interop_data_t *telemetry, wifi_reason_code_t code, int ap) {
     if (ap == 0) {
         switch (code) {
             case AWLAN_REASON_UNSPECIFIED: telemetry->sta_reason_counts[0]++; break;
@@ -2618,7 +2618,7 @@ int increment_reason_count(interop_data_t *telemetry, WlanReasonCode code, int a
     return 0;
 }
 
-int increment_status_count(interop_data_t *telemetry, wlan_status_code_t code, int ap) {
+int increment_status_count(interop_data_t *telemetry, wifi_status_code_t code, int ap) {
     if (ap == 0) {
         switch (code) {
             case AWLAN_STATUS_UNSPECIFIED_FAILURE: telemetry->sta_status_counts[0]++; break;
@@ -2679,7 +2679,7 @@ int ap_status_code(int ap_index, char *src_mac, char *dest_mac, int type, int st
     else {
         is_ap = 0;
     }
-    wlan_status_code_t status_code = (wlan_status_code_t)status;
+    wifi_status_code_t status_code = (wifi_status_code_t)status;
     if (increment_status_count(sta, status_code, is_ap) == -1) {
         wifi_util_dbg_print(WIFI_MON, " exit %s:%d as particular status is not there\n", __func__, __LINE__);
         return 0;
@@ -2716,7 +2716,7 @@ int ap_reason_code(int ap_index, char *src_mac, char *dest_mac, int type, int re
     else {
         is_ap = 0;
     }
-    WlanReasonCode reason = (WlanReasonCode)reason_code;
+    wifi_reason_code_t reason = (wifi_reason_code_t)reason_code;
     if (increment_reason_count(sta, reason, is_ap) == -1) {
         wifi_util_dbg_print(WIFI_MON, " exit %s:%d as particular reason is not there\n", __func__, __LINE__);
         return 0;
